@@ -44,8 +44,8 @@
                         <constraints>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="fjz-9f-fTX" secondAttribute="trailing" id="5Ey-vt-IvI"/>
                             <constraint firstItem="KIe-qS-l5g" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="BZJ-qp-R4H"/>
-                            <constraint firstAttribute="bottomMargin" secondItem="KIe-qS-l5g" secondAttribute="bottom" id="Qph-wk-FtR"/>
                             <constraint firstItem="fjz-9f-fTX" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="Zg1-CZ-uLO"/>
+                            <constraint firstAttribute="bottomMargin" secondItem="KIe-qS-l5g" secondAttribute="bottom" id="aMP-Nj-p1r"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="KIe-qS-l5g" secondAttribute="trailing" id="dSY-we-iPm"/>
                             <constraint firstItem="fjz-9f-fTX" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="gYB-GP-cgt"/>
                             <constraint firstItem="fjz-9f-fTX" firstAttribute="height" secondItem="8bC-Xf-vdC" secondAttribute="height" multiplier="0.07" id="uh4-uc-xrG"/>
@@ -107,7 +107,7 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="n13-P3-AE5" firstAttribute="leading" secondItem="4b3-P2-E39" secondAttribute="leading" id="95T-ud-f5O"/>
-                            <constraint firstItem="4b3-P2-E39" firstAttribute="bottom" secondItem="n13-P3-AE5" secondAttribute="bottom" id="XII-nJ-lq8"/>
+                            <constraint firstAttribute="bottomMargin" secondItem="n13-P3-AE5" secondAttribute="bottom" id="DkI-kk-7Ht"/>
                             <constraint firstAttribute="trailing" secondItem="n13-P3-AE5" secondAttribute="trailing" id="uhr-5v-0v9"/>
                             <constraint firstItem="n13-P3-AE5" firstAttribute="top" secondItem="gNd-5Q-hYE" secondAttribute="top" id="z0H-LK-wDg"/>
                         </constraints>
