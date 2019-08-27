@@ -21,7 +21,7 @@ class MainViewController: UIViewController {
         downloadingVC.title = "Downloading"
         let uploadingVC = UploaderController.instantiate(fromAppStoryboard: .Main)
         uploadingVC.title = "Uploading"
-        setupSegmentedController(controllers: [downloadingVC, uploadingVC])
+        setupSegmentedController(controllers: [uploadingVC])
     }
     
     private func setupSegmentedController(controllers: [UIViewController]) {

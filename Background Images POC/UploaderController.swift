@@ -8,6 +8,7 @@
 
 import UIKit
 import TLPhotoPicker
+import Alamofire
 
 class UploaderController: UIViewController {
     
@@ -17,6 +18,7 @@ class UploaderController: UIViewController {
     private var selectedImages: [TLPHAsset] = [] {
         didSet {
             self.reloadImages()
+            self.uploadImages(selectedImages)
         }
     }
     
@@ -48,6 +50,38 @@ class UploaderController: UIViewController {
         pickerController.configure = conf
         self.present(pickerController, animated: true, completion: nil)
     }
+    
+    let manager = SessionManager.init(configuration: URLSessionConfiguration.default)
+    
+    func uploadImage(_ image: TLPHAsset) {
+        uploadImages([image])
+    }
+    
+    func uploadImages(_ images: [TLPHAsset] ) {
+        let url = URL(string: "http://localhost:3000/multiupload")!
+        
+        manager.upload(multipartFormData: { (multipart) in
+            images.forEach({ (image) in
+                let imageData = image.fullResolutionImage!.jpegData(compressionQuality: 0.9)!
+                let fileName = image.originalFileName!
+                let newName = fileName.prefix(upTo: fileName.lastIndex { $0 == "." } ?? fileName.endIndex)
+                multipart.append(imageData, withName: "uploadedFile", fileName: "\(newName).jpg", mimeType: "image/jpeg")
+            })
+            
+        }, usingThreshold: UInt64.init(), to: url, method: .post, headers: nil, queue: nil) { (uploadResult) in
+            switch uploadResult {
+            case .success(let upload, _, _):
+                upload.response(completionHandler: { (answer) in
+                    print(answer)
+                })
+                upload.uploadProgress(closure: { (progress) in
+                    print(progress.localizedDescription!)
+                })
+            case .failure(let error):
+                print("multipart error: \(error)")
+            }
+        }
+    }
 }
 
 extension UploaderController: TLPhotosPickerViewControllerDelegate {
@@ -66,6 +100,10 @@ extension UploaderController: UICollectionViewDataSource {
         let image = selectedImages[indexPath.row]
         cell.setupImage(with: image.fullResolutionImage)
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        uploadImage(selectedImages[indexPath.row])
     }
 }
 

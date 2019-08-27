@@ -5,4 +5,5 @@ target 'Background Images POC' do
   use_frameworks!
   pod "TLPhotoPicker"
   pod 'EmeraldIOS', :git => 'https://github.com/cebroker/emerald-ios.git'
+  pod "Alamofire"
 end
