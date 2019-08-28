@@ -14,6 +14,7 @@ enum DataRequestResult<T> {
 }
 
 typealias ForegroundDownloadCompletionHandler = ((_ result: DataRequestResult<URL>) -> Void)
+typealias ForegroundUploadCompletionHandler = ((_ result: DataRequestResult<Bool>) -> Void)
 
 class DownloadItem: Codable {
     let remoteURL: URL //URL of the asset to be downloaded
@@ -30,5 +31,30 @@ class DownloadItem: Codable {
     init(remoteURL: URL, filePathURL: URL) {
         self.remoteURL = remoteURL
         self.filePathURL = filePathURL
+    }
+}
+
+typealias ForegroundCompletionHandler = ((_ result: DataRequestResult<URL>) -> Void)
+
+protocol BackgroundItemType: Codable {
+    var remotePathURL: URL { get }
+    var localPathURL: URL { get }
+    var completionHandler: ForegroundCompletionHandler? { get }
+}
+
+class BackgroundItem: BackgroundItemType {
+    
+    var remotePathURL: URL
+    var localPathURL: URL
+    var completionHandler: ForegroundCompletionHandler?
+    
+    private enum CodingKeys: String, CodingKey {
+        case remotePathURL
+        case localPathURL
+    }
+    
+    init(remotePathURL: URL, localPathURL: URL) {
+        self.remotePathURL = remotePathURL
+        self.localPathURL = localPathURL
     }
 }

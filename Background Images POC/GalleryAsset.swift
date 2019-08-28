@@ -20,4 +20,24 @@ struct GalleryAsset: Equatable {
         let fileName = id
         return cacheURL.appendingPathComponent(fileName)
     }
+    
+    func cache2() -> URL {
+        let cacheURL = FileManager.default.urls(for: FileManager.SearchPathDirectory.cachesDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).last!
+        let fileName = id
+        return cacheURL.appendingPathComponent(fileName)
+    }
+}
+import UIKit
+struct UploadGalleryAsset: Equatable {
+    
+    let fileName: String
+    var filePathUrl: URL? = nil
+    let image: UIImage
+    
+    // MARK: - Location
+    
+    func cacheFilePath() -> URL {
+        let cacheURL = FileManager.default.urls(for: FileManager.SearchPathDirectory.cachesDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).last!
+        return cacheURL.appendingPathComponent(fileName)
+    }
 }

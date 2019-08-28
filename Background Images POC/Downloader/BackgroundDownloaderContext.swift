@@ -8,39 +8,39 @@
 
 import Foundation
 
-class BackgroundDownloaderContext {
+class BackgroundDownloaderContext<T: BackgroundItemType> {
     
-    private var inMemoryDownloadItems: [URL: DownloadItem] = [:]
+    private var inMemoryDownloadItems: [URL: T] = [:]
     private let userDefaults = UserDefaults.standard
     
-    func loadDownloadItem(withURL url: URL) -> DownloadItem? {
+    func loadItem(withURL url: URL) -> T? {
         if let downloadItem = inMemoryDownloadItems[url] {
             return downloadItem
-        } else if let downloadItem = loadDownloadItemFromStorage(withURL: url) {
-            inMemoryDownloadItems[downloadItem.remoteURL] = downloadItem
+        } else if let downloadItem = loadItemFromStorage(withURL: url) {
+            inMemoryDownloadItems[downloadItem.remotePathURL] = downloadItem
             return downloadItem
         }
         return nil
     }
     
-    private func loadDownloadItemFromStorage(withURL url: URL) -> DownloadItem? {
+    private func loadItemFromStorage(withURL url: URL) -> T? {
         guard let encodedData = userDefaults.object(forKey: url.path) as? Data else {
             return nil
         }
-        let downloadItem = try? JSONDecoder().decode(DownloadItem.self, from: encodedData)
+        let downloadItem = try? JSONDecoder().decode(T.self, from: encodedData)
         return downloadItem
     }
     
-    func saveDownloadItem(_ downloadItem: DownloadItem) {
-        inMemoryDownloadItems[downloadItem.remoteURL] = downloadItem
-        let encodedData = try? JSONEncoder().encode(downloadItem)
-        userDefaults.set(encodedData, forKey: downloadItem.remoteURL.path)
+    func saveBackgroundItem(_ item: T) {
+        inMemoryDownloadItems[item.remotePathURL] = item
+        let encodedData = try? JSONEncoder().encode(item)
+        userDefaults.set(encodedData, forKey: item.remotePathURL.path)
         userDefaults.synchronize()
     }
     
-    func deleteDownloadItem(_ downloadItem: DownloadItem) {
-        inMemoryDownloadItems[downloadItem.remoteURL] = nil
-        userDefaults.removeObject(forKey: downloadItem.remoteURL.path)
+    func deleteBackgroundItem(_ item: T) {
+        inMemoryDownloadItems[item.remotePathURL] = nil
+        userDefaults.removeObject(forKey: item.remotePathURL.path)
         userDefaults.synchronize()
     }
 }

@@ -25,7 +25,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
-//        killApp()
+        killApp()
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
@@ -41,7 +41,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String, completionHandler: @escaping () -> Void) {
-        BackgroundDownloader.shared.backgroundCompletionHandler = completionHandler
+//        BackgroundDownloader.shared.backgroundCompletionHandler = completionHandler
+        BackgroundUploader.shared.backgroundCompletionHandler = completionHandler
     }
 
 }

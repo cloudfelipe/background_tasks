@@ -18,7 +18,7 @@ class UploaderController: UIViewController {
     private var selectedImages: [TLPHAsset] = [] {
         didSet {
             self.reloadImages()
-            self.uploadImages(selectedImages)
+//            self.uploadImages(selectedImages)
         }
     }
     
@@ -57,6 +57,8 @@ class UploaderController: UIViewController {
         uploadImages([image])
     }
     
+    let uploader = BackgroundUploader.shared
+    
     func uploadImages(_ images: [TLPHAsset] ) {
         let url = URL(string: "http://localhost:3000/multiupload")!
         
@@ -68,11 +70,26 @@ class UploaderController: UIViewController {
                 multipart.append(imageData, withName: "uploadedFile", fileName: "\(newName).jpg", mimeType: "image/jpeg")
             })
             
-        }, usingThreshold: UInt64.init(), to: url, method: .post, headers: nil, queue: nil) { (uploadResult) in
+        }, usingThreshold: UInt64(0), to: "http://", method: .post, headers: nil, queue: nil) { (uploadResult) in
             switch uploadResult {
-            case .success(let upload, _, _):
+            case .success(let upload, _, let uploadUrl):
+                let gallery = GalleryAsset(id: uploadUrl!.lastPathComponent, url: uploadUrl!)
+                let cache = gallery.cache2()
+                FileMngr.moveItem(at: uploadUrl!, to: cache)
+                upload.suspend()
+                defer { upload.cancel() }
+                if let almofireURL = uploadUrl {
+                    var request = URLRequest(url: url)
+                    request.httpMethod = "POST"
+                    for (key, value) in upload.request!.allHTTPHeaderFields! {
+                        request.addValue(value, forHTTPHeaderField: key)
+                    }
+                    self.uploader.upload(url: request, filePathUrl: cache, completionHandler: { (result) in
+                        print("ENTER TO RESPONSE")
+                    })
+                }
                 upload.response(completionHandler: { (answer) in
-                    print(answer)
+//                    print(answer)
                 })
                 upload.uploadProgress(closure: { (progress) in
                     print(progress.localizedDescription!)
@@ -80,6 +97,16 @@ class UploaderController: UIViewController {
             case .failure(let error):
                 print("multipart error: \(error)")
             }
+        }
+    }
+    let dataManager = DataManager()
+    func uploadImages2(_ image: TLPHAsset) {
+        let imageData = image.fullResolutionImage!.jpegData(compressionQuality: 0.9)!
+        let fileName = image.originalFileName!
+        let newName = fileName.prefix(upTo: fileName.lastIndex { $0 == "." } ?? fileName.endIndex)
+        let uploadGallery = UploadGalleryAsset(fileName: "\(newName).jpg", filePathUrl: nil, image: image.fullResolutionImage!)
+        dataManager.upload(uploadGallery) { (completed) in
+            print("completed! \(completed)")
         }
     }
 }
@@ -103,7 +130,8 @@ extension UploaderController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        uploadImage(selectedImages[indexPath.row])
+//        uploadImage(selectedImages[indexPath.row])
+        uploadImages2(selectedImages[indexPath.row])
     }
 }
 
