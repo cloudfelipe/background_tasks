@@ -16,6 +16,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        let userDefault = UserDefaults.standard
+        for (key, value) in userDefault.dictionaryRepresentation() {
+            print("\(key) = \(value) \n")
+        }
+//        let valuie = BackgroundDownloaderContext<BackgroundItem>()
+//        let item = valuie.loadItem(withURL: URL(string: "/id/8/2000/2000")!)
         return true
     }
 

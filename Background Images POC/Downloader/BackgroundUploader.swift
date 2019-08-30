@@ -22,27 +22,41 @@ class BackgroundUploader: NSObject {
         session =  URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
     }
     
-    func upload(url: URLRequest, filePathUrl: URL, completionHandler: @escaping ForegroundDownloadCompletionHandler) {
-        print("Scheduling to upload: \(filePathUrl)")
-//        let uploadItem = UploadItem(filePathURL: filePathUrl)
-//        uploadItem.completionHandler = completionHandler
-//        
-//        let task = session.uploadTask(with: url, fromFile: filePathUrl)
-//        task.earliestBeginDate = Date().addingTimeInterval(5)
-//        task.resume()
-    }
-    
-    func upload(remoteURL: URL, cachePath: URL, fileName: String, data: Data, completionHandler: @escaping ForegroundCompletionHandler) {
-        let uploadItem = BackgroundItem(remotePathURL: remoteURL, localPathURL: cachePath)
+    func upload(remoteURL: URL, cachePath: URL, id: String, fileName: String, data: Data, completionHandler: @escaping ForegroundCompletionHandler) {
+        print("Scheduling to upload: \(cachePath)")
+        let multiPart = MultipartFormData()
+        multiPart.append(data, withName: "uploadedImage", fileName: fileName, mimeType: "image/jpg")
+        let uploadItem = BackgroundItem(id: id, remotePathURL: remoteURL, localPathURL: cachePath)
         uploadItem.completionHandler = completionHandler
-        let request = uploadImageToServerFromApp(url: remoteURL, data: data)
-        let task = session.uploadTask(withStreamedRequest: request)
         context.saveBackgroundItem(uploadItem)
+        
+        let request = requestFor(url: remoteURL, with: data)
+        let task = session.uploadTask(withStreamedRequest: request)
         task.earliestBeginDate = Date().addingTimeInterval(5)
         task.resume()
-        print("Scheduling upload task")
+    }
+    
+    private func requestFor(url: URL, with data: Data) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let boundary = String.generateBoundaryString()
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        var body = Data()
+        let fname = "image.jpg"
+        let mimetype = "image/jpg"
+        //define the data post parameter
+        body.append("--\(boundary)\r\n", using: .utf8)
+        body.append("Content-Disposition:form-data; name=\"uploadedFile\"; filename=\"\(fname)\"\r\n", using: .utf8)
+        body.append("Content-Type: \(mimetype)\r\n\r\n", using: .utf8)
+        body.append(data)
+        body.append("\r\n", using: .utf8)
+        body.append("--\(boundary)--\r\n", using: .utf8)
+        request.httpBody = body
+        return request
     }
 }
+
+
 
 extension BackgroundUploader: URLSessionTaskDelegate {
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
@@ -54,6 +68,17 @@ extension BackgroundUploader: URLSessionTaskDelegate {
             let task = context.loadItem(withURL: url)
             task?.completionHandler?(.success(url))
             context.deleteBackgroundItem(task!)
+            
+//            session.getAllTasks { (listOfTaks) in
+//                listOfTaks.forEach({ (innerSession) in
+//                    switch innerSession.state {
+//                    case .completed:
+//                        break
+//                    default:
+//                        break
+//                    }
+//                })
+//            }
         }
     }
     
@@ -62,22 +87,19 @@ extension BackgroundUploader: URLSessionTaskDelegate {
             self.backgroundCompletionHandler?()
             self.backgroundCompletionHandler = nil
             print("completed background task")
+            
+//            session.getAllTasks { (listOfTaks) in
+//                listOfTaks.forEach({ (innerSession) in
+//                    switch innerSession.state {
+//                    case .completed:
+//                        let finishedItem = self.context.loadItem(withURL: innerSession.currentRequest!.url!)!
+//                        self.context.deleteBackgroundItem(finishedItem)
+//                    default:
+//                        break
+//                    }
+//                })
+//            }
         }
-    }
-}
-
-class FileMngr {
-    class func moveItem(at: URL, to: URL) {
-        do {
-            try FileManager.default.copyItem(at: at, to: to)
-        } catch let error {
-            print("error file manager: \(error)")
-        }
-    }
-    
-    enum URLMethod: String {
-        case get
-        case post
     }
 }
 
@@ -96,27 +118,9 @@ extension Data {
     }
 }
 
-func uploadImageToServerFromApp(url: URL, data: Data) -> URLRequest {
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    let boundary = generateBoundaryString()
-    //define the multipart request type
-    request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-    var body = Data()
-    let fname = "image.jpg"
-    let mimetype = "image/jpg"
-    //define the data post parameter
-    body.append("--\(boundary)\r\n", using: .utf8)
-    body.append("Content-Disposition:form-data; name=\"uploadedFile\"; filename=\"\(fname)\"\r\n", using: .utf8)
-    body.append("Content-Type: \(mimetype)\r\n\r\n", using: .utf8)
-    body.append(data)
-    body.append("\r\n", using: .utf8)
-    body.append("--\(boundary)--\r\n", using: .utf8)
-    request.httpBody = body
-    return request
+extension String {
+    static func generateBoundaryString() -> String {
+        return "Boundary-\(UUID().uuidString)"
+    }
 }
 
-func generateBoundaryString() -> String
-{
-    return "Boundary-\(NSUUID().uuidString)"
-}

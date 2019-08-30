@@ -75,7 +75,7 @@ class UploaderController: UIViewController {
             case .success(let upload, _, let uploadUrl):
                 let gallery = GalleryAsset(id: uploadUrl!.lastPathComponent, url: uploadUrl!)
                 let cache = gallery.cache2()
-                FileMngr.moveItem(at: uploadUrl!, to: cache)
+//                FileMngr.moveItem(at: uploadUrl!, to: cache)
                 upload.suspend()
                 defer { upload.cancel() }
                 if let almofireURL = uploadUrl {
@@ -84,9 +84,9 @@ class UploaderController: UIViewController {
                     for (key, value) in upload.request!.allHTTPHeaderFields! {
                         request.addValue(value, forHTTPHeaderField: key)
                     }
-                    self.uploader.upload(url: request, filePathUrl: cache, completionHandler: { (result) in
-                        print("ENTER TO RESPONSE")
-                    })
+//                    self.uploader.upload(url: request, filePathUrl: cache, completionHandler: { (result) in
+//                        print("ENTER TO RESPONSE")
+//                    })
                 }
                 upload.response(completionHandler: { (answer) in
 //                    print(answer)

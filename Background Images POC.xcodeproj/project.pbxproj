@@ -17,6 +17,8 @@
 		86B2BAAA231596E500A20F64 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86B2BAA9231596E500A20F64 /* Extensions.swift */; };
 		86B2BAAC2315E29A00A20F64 /* BackgroundUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86B2BAAB2315E29A00A20F64 /* BackgroundUploader.swift */; };
 		86B2BAAE2315EE2000A20F64 /* UploadItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86B2BAAD2315EE2000A20F64 /* UploadItem.swift */; };
+		86BECA932318378D00155216 /* CMultipartFormData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86BECA922318378D00155216 /* CMultipartFormData.swift */; };
+		86BECA952318388C00155216 /* CustomError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86BECA942318388C00155216 /* CustomError.swift */; };
 		86C9B65823146BAD00EB3950 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C9B65723146BAD00EB3950 /* AppDelegate.swift */; };
 		86C9B65A23146BAD00EB3950 /* DownloaderControllerr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C9B65923146BAD00EB3950 /* DownloaderControllerr.swift */; };
 		86C9B65D23146BAD00EB3950 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 86C9B65B23146BAD00EB3950 /* Main.storyboard */; };
@@ -40,6 +42,8 @@
 		86B2BAA9231596E500A20F64 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		86B2BAAB2315E29A00A20F64 /* BackgroundUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundUploader.swift; sourceTree = "<group>"; };
 		86B2BAAD2315EE2000A20F64 /* UploadItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadItem.swift; sourceTree = "<group>"; };
+		86BECA922318378D00155216 /* CMultipartFormData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CMultipartFormData.swift; sourceTree = "<group>"; };
+		86BECA942318388C00155216 /* CustomError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomError.swift; sourceTree = "<group>"; };
 		86C9B65423146BAD00EB3950 /* Background Images POC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Background Images POC.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		86C9B65723146BAD00EB3950 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		86C9B65923146BAD00EB3950 /* DownloaderControllerr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderControllerr.swift; sourceTree = "<group>"; };
@@ -104,6 +108,8 @@
 				86B2BA9D23158D4E00A20F64 /* GalleryAsset.swift */,
 				86B2BA9F23158D9100A20F64 /* DownloadItem.swift */,
 				86B2BAAD2315EE2000A20F64 /* UploadItem.swift */,
+				86BECA922318378D00155216 /* CMultipartFormData.swift */,
+				86BECA942318388C00155216 /* CustomError.swift */,
 				86B2BAA22315905100A20F64 /* SegmentedPager */,
 				86C9B66B2314786900EB3950 /* Downloader */,
 				86C9B65B23146BAD00EB3950 /* Main.storyboard */,
@@ -265,10 +271,12 @@
 			files = (
 				86B2BA9C231585D700A20F64 /* BackgroundDownloaderContext.swift in Sources */,
 				86B2BAA62315906400A20F64 /* MainViewController.swift in Sources */,
+				86BECA952318388C00155216 /* CustomError.swift in Sources */,
 				86B2BAAC2315E29A00A20F64 /* BackgroundUploader.swift in Sources */,
 				86C9B66D2314788600EB3950 /* BackgroundDownloader.swift in Sources */,
 				86C9B671231486F400EB3950 /* AssetFactory.swift in Sources */,
 				86B2BAAE2315EE2000A20F64 /* UploadItem.swift in Sources */,
+				86BECA932318378D00155216 /* CMultipartFormData.swift in Sources */,
 				86C9B66F231483BE00EB3950 /* DataManager.swift in Sources */,
 				86C9B66A231473A200EB3950 /* ImageCollectionViewCell.swift in Sources */,
 				86B2BAA42315905100A20F64 /* SegmentedPagerViewController.swift in Sources */,
@@ -425,6 +433,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = XRFNDLT6FX;
 				INFOPLIST_FILE = "Background Images POC/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -443,6 +452,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = XRFNDLT6FX;
 				INFOPLIST_FILE = "Background Images POC/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

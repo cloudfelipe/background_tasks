@@ -41,6 +41,43 @@ class BackgroundDownloaderContext<T: BackgroundItemType> {
     func deleteBackgroundItem(_ item: T) {
         inMemoryDownloadItems[item.remotePathURL] = nil
         userDefaults.removeObject(forKey: item.remotePathURL.path)
-        userDefaults.synchronize()
+//        userDefaults.synchronize()
+    }
+}
+
+class LocalFileManager {
+    class func moveItem(at: URL, to: URL) {
+        do {
+            try FileManager.default.copyItem(at: at, to: to)
+        } catch let error {
+            print("error file manager: \(error)")
+        }
+    }
+    
+    class func moveToTemporal(data: Data) -> (cacheId: String, cacheURL: URL)? {
+        let cacheId = UUID().uuidString
+        let tempURL =  FileManager.default
+            .temporaryDirectory
+            .appendingPathComponent(cacheId, isDirectory: false)
+        do {
+            try data.write(to: tempURL)
+            return (cacheId, tempURL)
+        } catch {
+            print("Handle the error, i.e. disk can be full")
+            return nil
+        }
+    }
+    
+    class func remoteItemAt(_ url: URL) {
+        do {
+            try FileManager.default.removeItem(at: url)
+        } catch let error {
+            print(error)
+        }
+    }
+    
+    enum URLMethod: String {
+        case get
+        case post
     }
 }

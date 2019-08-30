@@ -23,6 +23,7 @@ enum APIError: Error {
 
 class DataManager {
     func load(asset: GalleryAsset, remoteLoadHandler: @escaping ((_ result: DataRequestResult<LoadAssetResult>) -> Void)) -> UIImage? {
+//        print("temp \(asset.cachedLocalAssetURL())")
         if let image = UIImage(contentsOfFile: asset.cachedLocalAssetURL().path) {
             return image
         } else {
@@ -57,25 +58,15 @@ class DataManager {
     func upload(_ asset: UploadGalleryAsset, completionHandler: @escaping((_ result: Bool) -> Void)) {
         let url = URL(string: "http://localhost:3000/upload")!
         let uploader = BackgroundUploader.shared
-//        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-//            .appendingPathComponent("pkm", isDirectory: false)
-//            .appendingPathExtension("jpg")
-        
-        let tempURL =  FileManager.default.temporaryDirectory
-            .appendingPathComponent("upload", isDirectory: false)
-            .appendingPathExtension("jpg")
         let imageData = asset.image.jpegData(compressionQuality: 0.9)!
-        do {
-            try imageData.write(to: tempURL)
-            uploader.upload(remoteURL: url, cachePath: tempURL, fileName: "testing.jpg", data: imageData) { (result) in
-                print("image uploaded")
-                try? FileManager.default.removeItem(at: tempURL)
-            }
-        } catch {
-            print("Handle the error, i.e. disk can be full")
+        guard let cache = LocalFileManager.moveToTemporal(data: imageData) else {
+            completionHandler(false)
+            return
         }
-        
-//        uploader.upload(filePath: url, fileName: asset.fileName, data: asset.data)
+        uploader.upload(remoteURL: url, cachePath: cache.cacheURL, id: cache.cacheId, fileName: "newOne.jpg", data: imageData) { (result) in
+            print("image uploaded")
+            LocalFileManager.remoteItemAt(cache.cacheURL)
+        }
     }
     
     private func getImage(from url: URL) -> UIImage? {

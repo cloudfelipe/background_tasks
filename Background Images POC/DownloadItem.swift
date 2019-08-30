@@ -44,16 +44,21 @@ protocol BackgroundItemType: Codable {
 
 class BackgroundItem: BackgroundItemType {
     
+    var id: String
     var remotePathURL: URL
     var localPathURL: URL
     var completionHandler: ForegroundCompletionHandler?
+    var completed = false
     
     private enum CodingKeys: String, CodingKey {
+        case id
         case remotePathURL
         case localPathURL
+        case completed
     }
     
-    init(remotePathURL: URL, localPathURL: URL) {
+    init(id: String, remotePathURL: URL, localPathURL: URL) {
+        self.id = id
         self.remotePathURL = remotePathURL
         self.localPathURL = localPathURL
     }

@@ -28,12 +28,12 @@ class BackgroundDownloader: NSObject {
             downloadItem.completionHandler = completionHandler
         } else {
             print("Scheduling to download: \(remoteURL)")
-            let downloadItem = BackgroundItem(remotePathURL: remoteURL, localPathURL: filePathURL)
+            let downloadItem = BackgroundItem(id: UUID().uuidString, remotePathURL: remoteURL, localPathURL: filePathURL)
             downloadItem.completionHandler = completionHandler
             context.saveBackgroundItem(downloadItem)
-            
+            downloadItem.completed = true
             let task = session.downloadTask(with: remoteURL)
-            task.earliestBeginDate = Date().addingTimeInterval(5)
+            task.earliestBeginDate = Date().addingTimeInterval(10)
             task.resume()
         }
     }
@@ -41,6 +41,11 @@ class BackgroundDownloader: NSObject {
 
 extension BackgroundDownloader: URLSessionDownloadDelegate {
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        
+        let userDe = UserDefaults.standard
+        let previous1 = userDe.value(forKey: "pre-didFinishDownloadingTo") as? Int ?? 0
+        userDe.set(previous1+1, forKey: "pre-didFinishDownloadingTo")
+        
         guard let originalRequestURL = downloadTask.originalRequest?.url,
             let downloadItem = context.loadItem(withURL: originalRequestURL) else {
                 return
@@ -54,9 +59,16 @@ extension BackgroundDownloader: URLSessionDownloadDelegate {
         }
         
         context.deleteBackgroundItem(downloadItem)
+        
+        let previous = userDe.value(forKey: "didFinishDownloadingTo") as? Int ?? 0
+        userDe.set(previous+1, forKey: "didFinishDownloadingTo")
     }
     
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
+        let userDe = UserDefaults.standard
+        let previous = userDe.value(forKey: "urlSessionDidFinishEvents") as? Int ?? 0
+        userDe.set(previous+1, forKey: "urlSessionDidFinishEvents")
+        userDe.synchronize()
         DispatchQueue.main.async {
             self.backgroundCompletionHandler?()
             self.backgroundCompletionHandler = nil
