@@ -15,11 +15,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        UIApplication.shared.applicationIconBadgeNumber = 0
+        let _ = NotificationManager.shared
+        let _ = BackgroundDownloader.shared
         // Override point for customization after application launch.
         let userDefault = UserDefaults.standard
         for (key, value) in userDefault.dictionaryRepresentation() {
             print("\(key) = \(value) \n")
         }
+//        let context = BackgroundDownloaderContext<BackgroundItem>()
+//        let values = context.loadAllPendingItems()
 //        let valuie = BackgroundDownloaderContext<BackgroundItem>()
 //        let item = valuie.loadItem(withURL: URL(string: "/id/8/2000/2000")!)
         return true
@@ -47,8 +52,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String, completionHandler: @escaping () -> Void) {
-//        BackgroundDownloader.shared.backgroundCompletionHandler = completionHandler
         BackgroundUploader.shared.backgroundCompletionHandler = completionHandler
+//        BackgroundDownloader.shared.backgroundCompletionHandler = completionHandler
     }
 
 }

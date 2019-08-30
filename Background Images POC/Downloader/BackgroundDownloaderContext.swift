@@ -10,21 +10,33 @@ import Foundation
 
 class BackgroundDownloaderContext<T: BackgroundItemType> {
     
-    private var inMemoryDownloadItems: [URL: T] = [:]
+    let backgroundTask = "BACKGROUND_TASK:"
+    
+    private var inMemoryDownloadItems: [String: T] = [:]
     private let userDefaults = UserDefaults.standard
     
+    private func identifier(with associated: URL) -> String {
+        return backgroundTask + associated.path
+    }
+    
+    func loadAllPendingItems() -> [T] {
+        return userDefaults.dictionaryRepresentation().keys.compactMap { (key) -> T? in
+            key.hasPrefix(backgroundTask) ? self.loadItemFromStorage(with: key) : nil
+        }
+    }
+    
     func loadItem(withURL url: URL) -> T? {
-        if let downloadItem = inMemoryDownloadItems[url] {
+        if let downloadItem = inMemoryDownloadItems[identifier(with: url)] {
             return downloadItem
-        } else if let downloadItem = loadItemFromStorage(withURL: url) {
-            inMemoryDownloadItems[downloadItem.remotePathURL] = downloadItem
+        } else if let downloadItem = loadItemFromStorage(with: identifier(with: url)) {
+            inMemoryDownloadItems[identifier(with: downloadItem.remotePathURL)] = downloadItem
             return downloadItem
         }
         return nil
     }
     
-    private func loadItemFromStorage(withURL url: URL) -> T? {
-        guard let encodedData = userDefaults.object(forKey: url.path) as? Data else {
+    private func loadItemFromStorage(with key: String) -> T? {
+        guard let encodedData = userDefaults.object(forKey: key) as? Data else {
             return nil
         }
         let downloadItem = try? JSONDecoder().decode(T.self, from: encodedData)
@@ -32,18 +44,31 @@ class BackgroundDownloaderContext<T: BackgroundItemType> {
     }
     
     func saveBackgroundItem(_ item: T) {
-        inMemoryDownloadItems[item.remotePathURL] = item
+        inMemoryDownloadItems[identifier(with: item.remotePathURL)] = item
         let encodedData = try? JSONEncoder().encode(item)
-        userDefaults.set(encodedData, forKey: item.remotePathURL.path)
+        userDefaults.set(encodedData, forKey: identifier(with: item.remotePathURL))
         userDefaults.synchronize()
     }
     
     func deleteBackgroundItem(_ item: T) {
-        inMemoryDownloadItems[item.remotePathURL] = nil
-        userDefaults.removeObject(forKey: item.remotePathURL.path)
-//        userDefaults.synchronize()
+        inMemoryDownloadItems[identifier(with: item.remotePathURL)] = nil
+        userDefaults.removeObject(forKey: identifier(with: item.remotePathURL))
     }
 }
+
+extension BackgroundDownloaderContext {
+    func loadAllItemsFiltering(_ urlList: [URL], exclude: Bool) -> [T] {
+        let allItems = loadAllPendingItems()
+        return allItems.filter { (item) -> Bool in
+            if exclude {
+                return !urlList.contains(item.remotePathURL)
+            } else {
+                return urlList.contains(item.remotePathURL)
+            }
+        }
+    }
+}
+
 
 class LocalFileManager {
     class func moveItem(at: URL, to: URL) {

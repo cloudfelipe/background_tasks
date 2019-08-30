@@ -37,9 +37,11 @@ class DownloadItem: Codable {
 typealias ForegroundCompletionHandler = ((_ result: DataRequestResult<URL>) -> Void)
 
 protocol BackgroundItemType: Codable {
+    var attempts: Int { get }
     var remotePathURL: URL { get }
     var localPathURL: URL { get }
     var completionHandler: ForegroundCompletionHandler? { get }
+    func newAttempt()
 }
 
 class BackgroundItem: BackgroundItemType {
@@ -48,13 +50,17 @@ class BackgroundItem: BackgroundItemType {
     var remotePathURL: URL
     var localPathURL: URL
     var completionHandler: ForegroundCompletionHandler?
-    var completed = false
+    var attempts: Int = 0
+    
+    func newAttempt() {
+        attempts += 1
+    }
     
     private enum CodingKeys: String, CodingKey {
         case id
         case remotePathURL
         case localPathURL
-        case completed
+        case attempts
     }
     
     init(id: String, remotePathURL: URL, localPathURL: URL) {

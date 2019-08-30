@@ -56,7 +56,7 @@ class DataManager {
     }
     
     func upload(_ asset: UploadGalleryAsset, completionHandler: @escaping((_ result: Bool) -> Void)) {
-        let url = URL(string: "http://localhost:3000/upload")!
+        let url = URL(string: "http://845bce9a.ngrok.io/upload")!
         let uploader = BackgroundUploader.shared
         let imageData = asset.image.jpegData(compressionQuality: 0.9)!
         guard let cache = LocalFileManager.moveToTemporal(data: imageData) else {
@@ -67,6 +67,10 @@ class DataManager {
             print("image uploaded")
             LocalFileManager.remoteItemAt(cache.cacheURL)
         }
+    }
+    
+    func pendingTasks() {
+        
     }
     
     private func getImage(from url: URL) -> UIImage? {
