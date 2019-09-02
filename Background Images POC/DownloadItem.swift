@@ -38,6 +38,7 @@ typealias ForegroundCompletionHandler = ((_ result: DataRequestResult<Background
 
 protocol BackgroundItemType: Codable {
     var id: String { get }
+    var taskIdentifier: Int? { get }
     var attempts: Int { get }
     var remotePathURL: URL { get }
     var localPathURL: URL { get }
@@ -48,6 +49,7 @@ protocol BackgroundItemType: Codable {
     
     func newAttempt()
     func setStatus(_ newStatus: BackgroundStatus)
+    func setSessionId(_ id: Int)
 }
 
 enum BackgroundStatus: Int, Codable {
@@ -64,6 +66,7 @@ struct TemporalFile {
 class BackgroundItem: BackgroundItemType {
     
     var id: String
+    var taskIdentifier: Int?
     var remotePathURL: URL
     var localPathURL: URL
     var completionHandler: ForegroundCompletionHandler?
@@ -71,6 +74,7 @@ class BackgroundItem: BackgroundItemType {
     var status: BackgroundStatus
     var fileName: String?
     var mimeType: String?
+    
     
     func newAttempt() {
         attempts += 1
@@ -80,8 +84,13 @@ class BackgroundItem: BackgroundItemType {
         self.status = newStatus
     }
     
+    func setSessionId(_ id: Int) {
+        self.taskIdentifier = id
+    }
+    
     private enum CodingKeys: String, CodingKey {
         case id
+        case taskIdentifier
         case remotePathURL
         case localPathURL
         case attempts
@@ -102,4 +111,5 @@ final class UploadBackgroundItem: BackgroundItem {
     var contentData: Data?
     var formDataName: String?
 }
+
 final class DownloadBackgroundItem: BackgroundItem {}

@@ -110,12 +110,12 @@ final class SessionWatcher {
 //        let dataContex = BackgroundDownloaderContext<BackgroundItem>()
         switch item.status {
         case .completed:
-//            LocalFileManager.removeItemWithId(item.id)
+            LocalFileManager.removeItemWithId(item.id)
 //            dataContex.deleteBackgroundItem(item)
             break
         case .running:
             if item is UploadBackgroundItem {
-//                BackgroundUploader.shared
+                BackgroundUploader.shared.startTask(item as! UploadBackgroundItem)
             } else if item is DownloadBackgroundItem {
                 BackgroundDownloader.shared.restartPendingTasks()
             }
@@ -132,14 +132,19 @@ final class SessionWatcher {
         let configuration = URLSessionConfiguration.background(withIdentifier: "")
         let session = URLSession(configuration: configuration)
         session.getTasksWithCompletionHandler { [weak self] (_, uploadTasks, downloadTasks) in
-            guard let incompletedDownloadItems = self?.incompletedItems(excluding: downloadTasks) else { return }
-//            self?.startDownloadingItems(incompletedDownloadItems)
+            if let incompletedDownloadItems = self?.incompletedItems(excluding: downloadTasks, for: DownloadBackgroundItem.self) {
+                BackgroundDownloader.shared.restartPendingTasks(incompletedDownloadItems)
+            }
+            if let incompletedUploadItem = self?.incompletedItems(excluding: uploadTasks, for: UploadBackgroundItem.self) {
+                BackgroundUploader.shared.restartPendingTasks(incompletedUploadItem)
+            }
         }
     }
     
-    private func incompletedItems(excluding tasks: [URLSessionTask]) -> [BackgroundItem] {
+    private func incompletedItems<T: BackgroundItemType>(excluding tasks: [URLSessionTask], for type: T.Type) -> [T] {
         let currentDownloading = tasks.compactMap { $0.originalRequest?.url }
-        return self.context.loadAllItemsFiltering(currentDownloading, exclude: true)
+        let context = BackgroundDownloaderContext<T>()
+        return context.loadAllItemsFiltering(currentDownloading, exclude: true)
     }
     
     func purge() {

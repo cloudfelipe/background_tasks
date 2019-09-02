@@ -37,7 +37,11 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
     
     func executeTask(_ taks: T) { }
     
-    private func recoveryTaskForm(_ originUrl: URL?) -> T? {
+    func startTask(_ task: URLSessionTask, associatedWith item: T) {
+        item.setSessionId(task.taskIdentifier)
+    }
+    
+    private func recoveryTaskFrom(_ originUrl: URL?) -> T? {
         guard let url = originUrl, let backgroundTask = context.loadItem(withURL: url) else {
             debugPrint("Didn't able to recover the background task for: \(originUrl?.absoluteString ?? "undefined")")
             return nil
@@ -45,16 +49,20 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
         return backgroundTask
     }
     
+    func restartPendingTasks(_ tasks: [T]) {
+        tasks.forEach { self.startTask($0) }
+    }
+    
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error = error {
             print("ERORR UPLOADING: \(error)")
-            let backgroundTask = recoveryTaskForm(task.currentRequest?.url)
+            let backgroundTask = recoveryTaskFrom(task.currentRequest?.url)
             backgroundTask?.completionHandler?(.failure(error))
         }
     }
     
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        guard let backgroundTask = recoveryTaskForm(dataTask.currentRequest?.url) else {
+        guard let backgroundTask = recoveryTaskFrom(dataTask.currentRequest?.url) else {
             return
         }
         print("Completed uploading task to \(backgroundTask.remotePathURL.absoluteString)")
@@ -68,10 +76,14 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
         let previous1 = userDe.value(forKey: "pre-didFinishDownloadingTo") as? Int ?? 0
         userDe.set(previous1+1, forKey: "pre-didFinishDownloadingTo")
         
-        guard let downloadItem = recoveryTaskForm(downloadTask.currentRequest?.url) else {
+        guard let downloadItem = recoveryTaskFrom(downloadTask.currentRequest?.url) else {
             return
         }
-        print("Downloaded: \(downloadItem.remotePathURL)")
+        print("Completed downloading task from: \(downloadItem.remotePathURL.absoluteString)")
+        downloadItem.setStatus(.completed)
+        context.saveBackgroundItem(downloadItem)
+        downloadItem.completionHandler?(.success(downloadItem))
+        
         do {
             try FileManager.default.moveItem(at: location, to: downloadItem.localPathURL)
             //            downloadItem.completionHandler?(.success(downloadItem.localPathURL))
