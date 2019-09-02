@@ -34,14 +34,31 @@ class DownloadItem: Codable {
     }
 }
 
-typealias ForegroundCompletionHandler = ((_ result: DataRequestResult<URL>) -> Void)
+typealias ForegroundCompletionHandler = ((_ result: DataRequestResult<BackgroundItemType>) -> Void)
 
 protocol BackgroundItemType: Codable {
+    var id: String { get }
     var attempts: Int { get }
     var remotePathURL: URL { get }
     var localPathURL: URL { get }
+    var fileName: String? { get }
+    var mimeType: String? { get }
+    var status: BackgroundStatus { get }
     var completionHandler: ForegroundCompletionHandler? { get }
+    
     func newAttempt()
+    func setStatus(_ newStatus: BackgroundStatus)
+}
+
+enum BackgroundStatus: Int, Codable {
+    case pending
+    case running
+    case completed
+}
+
+struct TemporalFile {
+    var id: String
+    var localPathURL: URL
 }
 
 class BackgroundItem: BackgroundItemType {
@@ -51,9 +68,16 @@ class BackgroundItem: BackgroundItemType {
     var localPathURL: URL
     var completionHandler: ForegroundCompletionHandler?
     var attempts: Int = 0
+    var status: BackgroundStatus
+    var fileName: String?
+    var mimeType: String?
     
     func newAttempt() {
         attempts += 1
+    }
+    
+    func setStatus(_ newStatus: BackgroundStatus) {
+        self.status = newStatus
     }
     
     private enum CodingKeys: String, CodingKey {
@@ -61,11 +85,21 @@ class BackgroundItem: BackgroundItemType {
         case remotePathURL
         case localPathURL
         case attempts
+        case status
+        case fileName
+        case mimeType
     }
     
-    init(id: String, remotePathURL: URL, localPathURL: URL) {
+    init(id: String, remotePathURL: URL, localPathURL: URL, status: BackgroundStatus = .pending) {
         self.id = id
         self.remotePathURL = remotePathURL
         self.localPathURL = localPathURL
+        self.status = status
     }
 }
+
+final class UploadBackgroundItem: BackgroundItem {
+    var contentData: Data?
+    var formDataName: String?
+}
+final class DownloadBackgroundItem: BackgroundItem {}

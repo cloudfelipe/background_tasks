@@ -54,6 +54,10 @@ class BackgroundDownloaderContext<T: BackgroundItemType> {
         inMemoryDownloadItems[identifier(with: item.remotePathURL)] = nil
         userDefaults.removeObject(forKey: identifier(with: item.remotePathURL))
     }
+    
+    func deleteItems(_ items: [T]) {
+        items.forEach { deleteBackgroundItem($0) }
+    }
 }
 
 extension BackgroundDownloaderContext {
@@ -79,6 +83,20 @@ class LocalFileManager {
         }
     }
     
+    class func moveToTemp(data: Data) -> TemporalFile? {
+        let cacheId = UUID().uuidString
+        let tempURL =  FileManager.default
+            .temporaryDirectory
+            .appendingPathComponent(cacheId, isDirectory: false)
+        do {
+            try data.write(to: tempURL)
+            return TemporalFile(id: cacheId, localPathURL: tempURL)
+        } catch {
+            print("Handle the error, i.e. disk can be full")
+            return nil
+        }
+    }
+    
     class func moveToTemporal(data: Data) -> (cacheId: String, cacheURL: URL)? {
         let cacheId = UUID().uuidString
         let tempURL =  FileManager.default
@@ -96,6 +114,27 @@ class LocalFileManager {
     class func remoteItemAt(_ url: URL) {
         do {
             try FileManager.default.removeItem(at: url)
+        } catch let error {
+            print(error)
+        }
+    }
+    
+    class func removeAllItemsIn(_ urls: [URL]) {
+        urls.forEach { remoteItemAt($0) }
+    }
+    
+    class func removeAllItemsByID(_ ids: [String]) {
+        ids.forEach {
+            removeItemWithId($0)
+        }
+    }
+    
+    class func removeItemWithId(_ id: String) {
+        let manager = FileManager.default
+        let tempURL =  manager.temporaryDirectory
+        let path = tempURL.appendingPathComponent(id)
+        do {
+            try FileManager.default.removeItem(at: path)
         } catch let error {
             print(error)
         }

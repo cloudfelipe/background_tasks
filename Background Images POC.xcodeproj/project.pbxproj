@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1B57F9D70461F61C1AE2E0EB /* Pods_Background_Images_POC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 31FB3C50FE1F8C6DC2A592F4 /* Pods_Background_Images_POC.framework */; };
+		86617B46231DC11D0045C476 /* BackgroundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86617B45231DC11D0045C476 /* BackgroundManager.swift */; };
 		86B2BA9C231585D700A20F64 /* BackgroundDownloaderContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86B2BA9B231585D700A20F64 /* BackgroundDownloaderContext.swift */; };
 		86B2BA9E23158D4E00A20F64 /* GalleryAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86B2BA9D23158D4E00A20F64 /* GalleryAsset.swift */; };
 		86B2BAA023158D9100A20F64 /* DownloadItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86B2BA9F23158D9100A20F64 /* DownloadItem.swift */; };
@@ -33,6 +34,7 @@
 /* Begin PBXFileReference section */
 		31FB3C50FE1F8C6DC2A592F4 /* Pods_Background_Images_POC.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Background_Images_POC.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A657BD026D29A211D078518 /* Pods-Background Images POC.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Background Images POC.debug.xcconfig"; path = "Target Support Files/Pods-Background Images POC/Pods-Background Images POC.debug.xcconfig"; sourceTree = "<group>"; };
+		86617B45231DC11D0045C476 /* BackgroundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundManager.swift; sourceTree = "<group>"; };
 		86B2BA9B231585D700A20F64 /* BackgroundDownloaderContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundDownloaderContext.swift; sourceTree = "<group>"; };
 		86B2BA9D23158D4E00A20F64 /* GalleryAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryAsset.swift; sourceTree = "<group>"; };
 		86B2BA9F23158D9100A20F64 /* DownloadItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadItem.swift; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 		86C9B66B2314786900EB3950 /* Downloader */ = {
 			isa = PBXGroup;
 			children = (
+				86617B45231DC11D0045C476 /* BackgroundManager.swift */,
 				86C9B66C2314788600EB3950 /* BackgroundDownloader.swift */,
 				86B2BAAB2315E29A00A20F64 /* BackgroundUploader.swift */,
 				86B2BA9B231585D700A20F64 /* BackgroundDownloaderContext.swift */,
@@ -284,6 +287,7 @@
 				86B2BAAA231596E500A20F64 /* Extensions.swift in Sources */,
 				86B2BAA023158D9100A20F64 /* DownloadItem.swift in Sources */,
 				86B2BA9E23158D4E00A20F64 /* GalleryAsset.swift in Sources */,
+				86617B46231DC11D0045C476 /* BackgroundManager.swift in Sources */,
 				86C9B65A23146BAD00EB3950 /* DownloaderControllerr.swift in Sources */,
 				86C9B65823146BAD00EB3950 /* AppDelegate.swift in Sources */,
 			);

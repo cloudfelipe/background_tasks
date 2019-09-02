@@ -8,19 +8,15 @@
 
 import Foundation
 
-class BackgroundDownloader: NSObject {
+class BackgroundDownloader: BackgroundManager<DownloadBackgroundItem> {
     
-    var maxAtteptsByTask = 3
-    var backgroundCompletionHandler: (() -> Void)?
     static let shared = BackgroundDownloader()
-    private var session: URLSession!
-    private let context = BackgroundDownloaderContext<BackgroundItem>()
     
     private override init() {
         super.init()
-        let configuration = URLSessionConfiguration.background(withIdentifier: "Background.Downloader.Session")
-        session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
-        restartPendingTasks()
+//        let configuration = URLSessionConfiguration.background(withIdentifier: "Background.Downloader.Session")
+//        session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
+//        restartPendingTasks()
     }
     
     func download(remoteURL: URL, filePathURL: URL, completionHandler: @escaping ForegroundCompletionHandler) {
@@ -30,25 +26,32 @@ class BackgroundDownloader: NSObject {
             restartPendingTasks()
         } else {
             print("Scheduling to download: \(remoteURL)")
-            let downloadItem = BackgroundItem(id: UUID().uuidString, remotePathURL: remoteURL, localPathURL: filePathURL)
+            let downloadItem = DownloadBackgroundItem(id: UUID().uuidString, remotePathURL: remoteURL, localPathURL: filePathURL)
             downloadItem.completionHandler = completionHandler
-            startDownloadigItem(downloadItem)
+//            startDownloadigItem(downloadItem)
+            startTask(downloadItem)
         }
     }
     
-    private func startDownloadigItem(_ item: BackgroundItem) {
-        item.newAttempt()
-        if item.attempts > maxAtteptsByTask {
-            context.deleteBackgroundItem(item)
-            let error = NSError(domain: "Max attempts reached", code: 500, userInfo: nil)
-            item.completionHandler?(.failure(error))
-            return
-        }
-        context.saveBackgroundItem(item)
-        let task = session.downloadTask(with: item.remotePathURL)
+    override func executeTask(_ taks: DownloadBackgroundItem) {
+        let task = session.downloadTask(with: taks.remotePathURL)
         task.earliestBeginDate = Date().addingTimeInterval(5)
         task.resume()
     }
+    
+//    private func startDownloadigItem(_ item: BackgroundItem) {
+//        item.newAttempt()
+//        if item.attempts > maxAtteptsByTask {
+//            context.deleteBackgroundItem(item)
+//            let error = NSError(domain: "Max attempts reached", code: 500, userInfo: nil)
+//            item.completionHandler?(.failure(error))
+//            return
+//        }
+//        context.saveBackgroundItem(item)
+//        let task = session.downloadTask(with: item.remotePathURL)
+//        task.earliestBeginDate = Date().addingTimeInterval(5)
+//        task.resume()
+//    }
     
     func restartPendingTasks() {
         session.getTasksWithCompletionHandler { [weak self] (_, uploadTasks, downloadTasks) in
@@ -63,7 +66,7 @@ class BackgroundDownloader: NSObject {
 
 extension BackgroundDownloader {
     private func startDownloadingItems(_ items: [BackgroundItem]) {
-        items.forEach { startDownloadigItem($0) }
+//        items.forEach { startDownloadigItem($0) }
     }
     
     private func incompletedItems(excluding tasks: [URLSessionTask]) -> [BackgroundItem] {
@@ -72,6 +75,7 @@ extension BackgroundDownloader {
     }
 }
 
+/*
 extension BackgroundDownloader: URLSessionDownloadDelegate {
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         
@@ -86,7 +90,7 @@ extension BackgroundDownloader: URLSessionDownloadDelegate {
         print("Downloaded: \(downloadItem.remotePathURL)")
         do {
             try FileManager.default.moveItem(at: location, to: downloadItem.localPathURL)
-            downloadItem.completionHandler?(.success(downloadItem.localPathURL))
+//            downloadItem.completionHandler?(.success(downloadItem.localPathURL))
         } catch let error {
             downloadItem.completionHandler?(.failure(error))
         }
@@ -106,6 +110,6 @@ extension BackgroundDownloader: URLSessionDownloadDelegate {
             self.backgroundCompletionHandler?() 
             self.backgroundCompletionHandler = nil
         }
-        NotificationManager.shared.sheduleNotificationInBackground(title: "urlSessionDidFinishEvents")
     }
 }
+*/
