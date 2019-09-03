@@ -31,7 +31,13 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
             item.completionHandler?(.failure(error))
             return
         }
-        guard let sessionTask = prepareSessionTask(associatedTo: item) else { return }
+        guard let sessionTask = prepareSessionTask(associatedTo: item) else {
+            debugPrint("Don't able to create background session")
+            context.deleteBackgroundItem(item)
+            let error = NSError(domain: "Session task creation error", code: 500, userInfo: nil)
+            item.completionHandler?(.failure(error))
+            return
+        }
         item.setStatus(.running)
         startTask(sessionTask, associatedWith: item)
         debugPrint("starting task: \(item.id)")
@@ -52,7 +58,7 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
     
     private func getBackgroundItemWithId(_ originId: Int?) -> T? {
         guard let id = originId, let backgroundTask = context.loadItem(with: id) else {
-            debugPrint("Didn't able to recover the background task for: \(String(describing: originId))")
+            debugPrint("Don't able to recover the background task for: \(String(describing: originId))")
             return nil
         }
         return backgroundTask
