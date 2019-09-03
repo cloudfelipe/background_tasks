@@ -14,7 +14,7 @@ class GalleryAssetFactory {
             print("Can't get URL from: \(string)")
             return nil
         }
-        return GalleryAsset(id: id, url: url)
+        return GalleryAsset(id: id, url: url, state: .pending)
     }
     
     class func assentsFromURLStringList(_ strings: [String]) -> [GalleryAsset] {

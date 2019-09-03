@@ -12,6 +12,7 @@ struct GalleryAsset: Equatable {
     
     let id: String
     let url: URL
+    var state: BackgroundStatus = .pending
     
     // MARK: - Location
     
@@ -33,6 +34,7 @@ struct UploadGalleryAsset: Equatable {
     let fileName: String
     var filePathUrl: URL? = nil
     let image: UIImage
+    var state: BackgroundStatus = .pending
     
     // MARK: - Location
     

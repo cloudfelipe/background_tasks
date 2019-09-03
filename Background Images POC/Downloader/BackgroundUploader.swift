@@ -22,31 +22,29 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
         super.init()
     }
     
-    func upload(remoteURL: URL, cachePath: URL, id: String, fileName: String, data: Data, completionHandler: @escaping ForegroundCompletionHandler) {
+    func upload(remoteURL: URL, cachePath: URL, id: String, data: Data, completionHandler: @escaping ForegroundCompletionHandler) {
         print("Scheduling to upload: \(cachePath)")
         let uploadItem = UploadBackgroundItem(id: id, remotePathURL: remoteURL, localPathURL: cachePath)
         uploadItem.contentData = data
         uploadItem.mimeType = "image/jpg"
-        uploadItem.fileName = fileName
+        uploadItem.fileName = id + ".jpg"
         uploadItem.formDataName = "uploadedFile"
         uploadItem.completionHandler = completionHandler
         startTask(uploadItem)
     }
     
-    override func executeTask(_ taks: UploadBackgroundItem) {
-        var contentData = try? Data(contentsOf: taks.localPathURL)
-        contentData = contentData ?? taks.contentData
-        guard let fileName = taks.fileName, let mimeType = taks.mimeType,
-            let data = contentData, let formName = taks.formDataName else {
+    override func prepareSessionTask(associatedTo backgroundItem: UploadBackgroundItem) -> URLSessionTask? {
+        var contentData = try? Data(contentsOf: backgroundItem.localPathURL)
+        contentData = contentData ?? backgroundItem.contentData
+        guard let fileName = backgroundItem.fileName, let mimeType = backgroundItem.mimeType,
+            let data = contentData, let formName = backgroundItem.formDataName else {
                 let error = NSError(domain: "Missing multipart form data", code: 404, userInfo: nil)
-                taks.completionHandler?(.failure(error))
-                return
+                backgroundItem.completionHandler?(.failure(error))
+                return nil
         }
         let multiPartData = MultiPartForm(fileName: fileName, mimyType: mimeType, formName: formName)
-        let request = requestFor(remote: taks.remotePathURL, with: data, formData: multiPartData)
-        let task = session.uploadTask(withStreamedRequest: request)
-        task.earliestBeginDate = Date().addingTimeInterval(5)
-        task.resume()
+        let request = requestFor(remote: backgroundItem.remotePathURL, with: data, formData: multiPartData)
+        return session.uploadTask(withStreamedRequest: request)
     }
     
     private func requestFor(remote url: URL, with data: Data, formData: MultiPartForm) -> URLRequest {
@@ -72,13 +70,6 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
 
 
 extension Data {
-    
-    /// Append string to Data
-    ///
-    /// Rather than littering my code with calls to `data(using: .utf8)` to convert `String` values to `Data`, this wraps it in a nice convenient little extension to Data. This defaults to converting using UTF-8.
-    ///
-    /// - parameter string:       The string to be added to the `Data`.
-    
     mutating func append(_ string: String, using encoding: String.Encoding = .utf8) {
         if let data = string.data(using: encoding) {
             append(data)

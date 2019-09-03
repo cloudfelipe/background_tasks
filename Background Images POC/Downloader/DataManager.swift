@@ -56,21 +56,22 @@ class DataManager {
     }
     
     func upload(_ asset: UploadGalleryAsset, completionHandler: @escaping((_ result: Bool) -> Void)) {
-        let url = URL(string: "http://1563194e.ngrok.io/upload")!
+        let url = URL(string: "http://9a42f41e.ngrok.io/upload")!
         let uploader = BackgroundUploader.shared
         let imageData = asset.image.jpegData(compressionQuality: 0.9)!
         guard let cache = LocalFileManager.moveToTemp(data: imageData) else {
             completionHandler(false)
             return
         }
-        uploader.upload(remoteURL: url, cachePath: cache.localPathURL, id: cache.id, fileName: "newOne.jpg", data: imageData) { (result) in
-            
+        uploader.upload(remoteURL: url, cachePath: cache.localPathURL, id: cache.id, data: imageData) { (result) in
             switch result {
             case .success(let backgroundItem):
                 print("image uploaded")
                 SessionWatcher.shared.processBackgroundItem(backgroundItem as! BackgroundItem)
+                completionHandler(true)
             case .failure(let error):
                 print(error)
+                completionHandler(false)
             }
         }
     }
@@ -125,6 +126,8 @@ final class SessionWatcher {
         case .pending:
             //Attemp to run the task again
             break
+        case .failed:
+            break
         }
     }
     
@@ -142,7 +145,7 @@ final class SessionWatcher {
     }
     
     private func incompletedItems<T: BackgroundItemType>(excluding tasks: [URLSessionTask], for type: T.Type) -> [T] {
-        let currentDownloading = tasks.compactMap { $0.originalRequest?.url }
+        let currentDownloading = tasks.compactMap { $0.taskIdentifier }
         let context = BackgroundDownloaderContext<T>()
         return context.loadAllItemsFiltering(currentDownloading, exclude: true)
     }

@@ -38,7 +38,7 @@ typealias ForegroundCompletionHandler = ((_ result: DataRequestResult<Background
 
 protocol BackgroundItemType: Codable {
     var id: String { get }
-    var taskIdentifier: Int? { get }
+    var taskIdentifier: Int { get }
     var attempts: Int { get }
     var remotePathURL: URL { get }
     var localPathURL: URL { get }
@@ -56,17 +56,13 @@ enum BackgroundStatus: Int, Codable {
     case pending
     case running
     case completed
-}
-
-struct TemporalFile {
-    var id: String
-    var localPathURL: URL
+    case failed
 }
 
 class BackgroundItem: BackgroundItemType {
     
     var id: String
-    var taskIdentifier: Int?
+    var taskIdentifier: Int = -1
     var remotePathURL: URL
     var localPathURL: URL
     var completionHandler: ForegroundCompletionHandler?

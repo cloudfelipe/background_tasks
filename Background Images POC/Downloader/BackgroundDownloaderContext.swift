@@ -10,13 +10,13 @@ import Foundation
 
 class BackgroundDownloaderContext<T: BackgroundItemType> {
     
-    let backgroundTask = "BACKGROUND_TASK:"
+    private let backgroundTask = "BACKGROUND_TASK:"
     
     private var inMemoryDownloadItems: [String: T] = [:]
     private let userDefaults = UserDefaults.standard
     
-    private func identifier(with associated: URL) -> String {
-        return backgroundTask + associated.path
+    private func identifier(with id: Int) -> String {
+        return "\(backgroundTask)\(id)"
     }
     
     func loadAllPendingItems() -> [T] {
@@ -25,11 +25,11 @@ class BackgroundDownloaderContext<T: BackgroundItemType> {
         }
     }
     
-    func loadItem(withURL url: URL) -> T? {
-        if let downloadItem = inMemoryDownloadItems[identifier(with: url)] {
+    func loadItem(with taskId: Int) -> T? {
+        if let downloadItem = inMemoryDownloadItems[identifier(with: taskId)] {
             return downloadItem
-        } else if let downloadItem = loadItemFromStorage(with: identifier(with: url)) {
-            inMemoryDownloadItems[identifier(with: downloadItem.remotePathURL)] = downloadItem
+        } else if let downloadItem = loadItemFromStorage(with: identifier(with: taskId)) {
+            inMemoryDownloadItems[identifier(with: taskId)] = downloadItem
             return downloadItem
         }
         return nil
@@ -44,15 +44,14 @@ class BackgroundDownloaderContext<T: BackgroundItemType> {
     }
     
     func saveBackgroundItem(_ item: T) {
-        inMemoryDownloadItems[identifier(with: item.remotePathURL)] = item
+        inMemoryDownloadItems[identifier(with: item.taskIdentifier)] = item
         let encodedData = try? JSONEncoder().encode(item)
-        userDefaults.set(encodedData, forKey: identifier(with: item.remotePathURL))
-        userDefaults.synchronize()
+        userDefaults.set(encodedData, forKey: identifier(with: item.taskIdentifier))
     }
     
     func deleteBackgroundItem(_ item: T) {
-        inMemoryDownloadItems[identifier(with: item.remotePathURL)] = nil
-        userDefaults.removeObject(forKey: identifier(with: item.remotePathURL))
+        inMemoryDownloadItems[identifier(with: item.taskIdentifier)] = nil
+        userDefaults.removeObject(forKey: identifier(with: item.taskIdentifier))
     }
     
     func deleteItems(_ items: [T]) {
@@ -61,87 +60,23 @@ class BackgroundDownloaderContext<T: BackgroundItemType> {
 }
 
 extension BackgroundDownloaderContext {
-    func loadAllItemsFiltering(_ urlList: [URL], exclude: Bool) -> [T] {
+    func loadAllItemsFiltering(_ ids: [Int], exclude: Bool) -> [T] {
         let allItems = loadAllPendingItems()
         return allItems.filter { (item) -> Bool in
             if exclude {
-                return !urlList.contains(item.remotePathURL)
+                return !ids.contains(item.taskIdentifier)
             } else {
-                return urlList.contains(item.remotePathURL)
+                return ids.contains(item.taskIdentifier)
             }
         }
     }
 }
 
-
-class LocalFileManager {
-    class func moveItem(at: URL, to: URL) {
-        do {
-            try FileManager.default.copyItem(at: at, to: to)
-        } catch let error {
-            print("error file manager: \(error)")
+func printBackgroundItems() {
+    let userDefault = UserDefaults.standard
+    for (key, value) in userDefault.dictionaryRepresentation() {
+        if key.contains("BACKGROUND_TASK:") {
+            print("\(key) = \(value) \n")
         }
-    }
-    
-    class func moveToTemp(data: Data) -> TemporalFile? {
-        let cacheId = UUID().uuidString
-        let tempURL =  FileManager.default
-            .temporaryDirectory
-            .appendingPathComponent(cacheId, isDirectory: false)
-        do {
-            try data.write(to: tempURL)
-            return TemporalFile(id: cacheId, localPathURL: tempURL)
-        } catch {
-            print("Handle the error, i.e. disk can be full")
-            return nil
-        }
-    }
-    
-    class func moveToTemporal(data: Data) -> (cacheId: String, cacheURL: URL)? {
-        let cacheId = UUID().uuidString
-        let tempURL =  FileManager.default
-            .temporaryDirectory
-            .appendingPathComponent(cacheId, isDirectory: false)
-        do {
-            try data.write(to: tempURL)
-            return (cacheId, tempURL)
-        } catch {
-            print("Handle the error, i.e. disk can be full")
-            return nil
-        }
-    }
-    
-    class func remoteItemAt(_ url: URL) {
-        do {
-            try FileManager.default.removeItem(at: url)
-        } catch let error {
-            print(error)
-        }
-    }
-    
-    class func removeAllItemsIn(_ urls: [URL]) {
-        urls.forEach { remoteItemAt($0) }
-    }
-    
-    class func removeAllItemsByID(_ ids: [String]) {
-        ids.forEach {
-            removeItemWithId($0)
-        }
-    }
-    
-    class func removeItemWithId(_ id: String) {
-        let manager = FileManager.default
-        let tempURL =  manager.temporaryDirectory
-        let path = tempURL.appendingPathComponent(id)
-        do {
-            try FileManager.default.removeItem(at: path)
-        } catch let error {
-            print(error)
-        }
-    }
-    
-    enum URLMethod: String {
-        case get
-        case post
     }
 }

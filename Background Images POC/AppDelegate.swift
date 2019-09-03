@@ -19,11 +19,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let _ = NotificationManager.shared
 //        let _ = BackgroundDownloader.shared
         // Override point for customization after application launch.
-        let userDefault = UserDefaults.standard
-        for (key, value) in userDefault.dictionaryRepresentation() {
-            print("\(key) = \(value) \n")
-        }
-        SessionWatcher.shared.purge()
+        printBackgroundItems()
+//        SessionWatcher.shared.purge()
 //        let context = BackgroundDownloaderContext<BackgroundItem>()
 //        let values = context.loadAllPendingItems()
 //        let valuie = BackgroundDownloaderContext<BackgroundItem>()

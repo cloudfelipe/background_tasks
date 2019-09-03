@@ -20,23 +20,21 @@ class BackgroundDownloader: BackgroundManager<DownloadBackgroundItem> {
     }
     
     func download(remoteURL: URL, filePathURL: URL, completionHandler: @escaping ForegroundCompletionHandler) {
-        if let downloadItem = context.loadItem(withURL: remoteURL) {
-            print("Already downloading: \(remoteURL)")
-            downloadItem.completionHandler = completionHandler
-            restartPendingTasks()
-        } else {
-            print("Scheduling to download: \(remoteURL)")
-            let downloadItem = DownloadBackgroundItem(id: UUID().uuidString, remotePathURL: remoteURL, localPathURL: filePathURL)
-            downloadItem.completionHandler = completionHandler
-//            startDownloadigItem(downloadItem)
-            startTask(downloadItem)
-        }
+//        if let downloadItem = context.loadItem(withURL: remoteURL) {
+//            print("Already downloading: \(remoteURL)")
+//            downloadItem.completionHandler = completionHandler
+//            restartPendingTasks()
+//        } else {
+//            print("Scheduling to download: \(remoteURL)")
+//            let downloadItem = DownloadBackgroundItem(id: UUID().uuidString, remotePathURL: remoteURL, localPathURL: filePathURL)
+//            downloadItem.completionHandler = completionHandler
+////            startDownloadigItem(downloadItem)
+//            startTask(downloadItem)
+//        }
     }
     
-    override func executeTask(_ taks: DownloadBackgroundItem) {
-        let task = session.downloadTask(with: taks.remotePathURL)
-        task.earliestBeginDate = Date().addingTimeInterval(5)
-        task.resume()
+    override func prepareSessionTask(associatedTo backgroundItem: DownloadBackgroundItem) -> URLSessionTask? {
+        return session.downloadTask(with: backgroundItem.remotePathURL)
     }
     
 //    private func startDownloadigItem(_ item: BackgroundItem) {
@@ -70,7 +68,7 @@ extension BackgroundDownloader {
     }
     
     private func incompletedItems(excluding tasks: [URLSessionTask]) -> [BackgroundItem] {
-        let currentDownloading = tasks.compactMap { $0.originalRequest?.url }
+        let currentDownloading = tasks.compactMap { $0.taskIdentifier }
         return self.context.loadAllItemsFiltering(currentDownloading, exclude: true)
     }
 }

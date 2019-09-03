@@ -12,7 +12,10 @@ class ImageCollectionViewCell: UICollectionViewCell {
     
     private var assetDataManager = DataManager()
     private var asset: GalleryAsset?
+    private var uploadAsset: UploadGalleryAsset?
+    @IBOutlet weak var errorImageView: UIImageView!
     
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var imageView: UIImageView!
     
     override func prepareForReuse() {
@@ -20,8 +23,41 @@ class ImageCollectionViewCell: UICollectionViewCell {
         imageView.image = nil
     }
     
-    func setupImage(with image: UIImage?) {
-        imageView.image = image
+    private func updateVisibility(for status: BackgroundStatus) {
+        DispatchQueue.main.async {
+            self.imageView.alpha = 0.4
+            self.activityIndicator.stopAnimating()
+            self.errorImageView.isHidden = true
+            switch status {
+            case .completed:
+                self.imageView.alpha = 1
+            case .pending:
+                break
+            case .running:
+                self.activityIndicator.startAnimating()
+            case .failed:
+                self.errorImageView.isHidden = false
+            }
+        }
+    }
+    
+    func setupUploaderAsset(with image: UploadGalleryAsset) {
+        uploadAsset = image
+        imageView.image = image.image
+        updateVisibility(for: image.state)
+    }
+    
+    func startUpload() {
+        self.uploadAsset?.state = .running
+        self.updateVisibility(for: self.uploadAsset!.state)
+        assetDataManager.upload(uploadAsset!) { (result) in
+            if result {
+                self.uploadAsset?.state = .completed
+            } else {
+                self.uploadAsset?.state = .failed
+            }
+            self.updateVisibility(for: self.uploadAsset!.state)
+        }
     }
     
     func setupAssent(_ assent: GalleryAsset) {

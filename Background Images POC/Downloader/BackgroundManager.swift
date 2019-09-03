@@ -23,6 +23,7 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
     }
     
     func startTask(_ item: T) {
+        guard let sessionTask = prepareSessionTask(associatedTo: item) else { return }
         item.newAttempt()
         if item.attempts > maxAtteptsByTask {
             context.deleteBackgroundItem(item)
@@ -31,22 +32,53 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
             return
         }
         item.setStatus(.running)
-        context.saveBackgroundItem(item)
-        executeTask(item)
+        startTask(sessionTask, associatedWith: item)
+    }
+    
+    func prepareSessionTask(associatedTo backgroundItem: T) -> URLSessionTask? {
+        fatalError("`prepareSessionTask` method must be implemented")
     }
     
     func executeTask(_ taks: T) { }
     
-    func startTask(_ task: URLSessionTask, associatedWith item: T) {
+    private func startTask(_ task: URLSessionTask, associatedWith item: T) {
         item.setSessionId(task.taskIdentifier)
+        context.saveBackgroundItem(item)
+        task.earliestBeginDate = Date().addingTimeInterval(5)
+        task.resume()
     }
     
-    private func recoveryTaskFrom(_ originUrl: URL?) -> T? {
-        guard let url = originUrl, let backgroundTask = context.loadItem(withURL: url) else {
-            debugPrint("Didn't able to recover the background task for: \(originUrl?.absoluteString ?? "undefined")")
+    private func getBackgroundItemWithId(_ originId: Int?) -> T? {
+        guard let id = originId, let backgroundTask = context.loadItem(with: id) else {
+            debugPrint("Didn't able to recover the background task for: \(String(describing: originId))")
             return nil
         }
         return backgroundTask
+    }
+    
+    @discardableResult
+    private func handleResponseFromTask(_ task: URLSessionTask) -> Bool {
+        guard let backgroundTask = getBackgroundItemWithId(task.taskIdentifier) else {
+            return false
+        }
+        guard let httpResponse = task.response as? HTTPURLResponse else {
+            let error = NSError(domain: "Server not response", code: 1000, userInfo: nil)
+            backgroundTask.setStatus(.failed)
+            backgroundTask.completionHandler?(.failure(error))
+            context.saveBackgroundItem(backgroundTask)
+            return false
+        }
+        guard (200...299).contains(httpResponse.statusCode) else {
+            let error = NSError(domain: "Request failed", code: httpResponse.statusCode, userInfo: nil)
+            backgroundTask.setStatus(.failed)
+            backgroundTask.completionHandler?(.failure(error))
+            context.saveBackgroundItem(backgroundTask)
+            return false
+        }
+        backgroundTask.setStatus(.completed)
+        context.saveBackgroundItem(backgroundTask)
+        backgroundTask.completionHandler?(.success(backgroundTask))
+        return true
     }
     
     func restartPendingTasks(_ tasks: [T]) {
@@ -55,28 +87,25 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error = error {
-            print("ERORR UPLOADING: \(error)")
-            let backgroundTask = recoveryTaskFrom(task.currentRequest?.url)
-            backgroundTask?.completionHandler?(.failure(error))
+            if let backgroundTask = getBackgroundItemWithId(task.taskIdentifier) {
+                backgroundTask.setStatus(.failed)
+                context.saveBackgroundItem(backgroundTask)
+                backgroundTask.completionHandler?(.failure(error))
+            }
         }
     }
     
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        guard let backgroundTask = recoveryTaskFrom(dataTask.currentRequest?.url) else {
-            return
-        }
-        print("Completed uploading task to \(backgroundTask.remotePathURL.absoluteString)")
-        backgroundTask.setStatus(.completed)
-        context.saveBackgroundItem(backgroundTask)
-        backgroundTask.completionHandler?(.success(backgroundTask))
+        handleResponseFromTask(dataTask)
     }
     
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        /*
         let userDe = UserDefaults.standard
         let previous1 = userDe.value(forKey: "pre-didFinishDownloadingTo") as? Int ?? 0
         userDe.set(previous1+1, forKey: "pre-didFinishDownloadingTo")
         
-        guard let downloadItem = recoveryTaskFrom(downloadTask.currentRequest?.url) else {
+        guard let downloadItem = getBackgroundItemWithId(downloadTask.taskIdentifier) else {
             return
         }
         print("Completed downloading task from: \(downloadItem.remotePathURL.absoluteString)")
@@ -95,6 +124,8 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
         
         let previous = userDe.value(forKey: "didFinishDownloadingTo") as? Int ?? 0
         userDe.set(previous+1, forKey: "didFinishDownloadingTo")
+        */
+        handleResponseFromTask(downloadTask)
     }
     
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
@@ -103,6 +134,7 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
             self.backgroundCompletionHandler = nil
             print("completed background task")
         }
+        
         NotificationManager.shared.sheduleNotificationInBackground(title: "urlSessionDidFinishEvents")
     }
 }
