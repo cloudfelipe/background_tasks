@@ -38,9 +38,10 @@ class LocalFileManager {
     
     class func moveToTemporal(data: Data) -> (cacheId: String, cacheURL: URL)? {
         let cacheId = UUID().uuidString
-        let tempURL =  FileManager.default
-            .temporaryDirectory
-            .appendingPathComponent(cacheId, isDirectory: false)
+//        let tempURL =  FileManager.default
+//            .temporaryDirectory
+//            .appendingPathComponent(cacheId, isDirectory: false)
+        let tempURL = temporaryDirectory(appending: cacheId)
         do {
             try data.write(to: tempURL)
             return (cacheId, tempURL)
@@ -69,14 +70,18 @@ class LocalFileManager {
     }
     
     class func removeItemWithId(_ id: String) {
-        let manager = FileManager.default
-        let tempURL =  manager.temporaryDirectory
-        let path = tempURL.appendingPathComponent(id)
+//        let manager = FileManager.default
+        let tempURL = temporaryDirectory(appending: id)
         do {
-            try FileManager.default.removeItem(at: path)
+            try FileManager.default.removeItem(at: tempURL)
         } catch let error {
-            print(error)
+            debugPrint(error)
         }
+    }
+    
+    class func temporaryDirectory(appending id: String) -> URL {
+        return URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+            .appendingPathComponent(id, isDirectory: false)
     }
     
     enum URLMethod: String {

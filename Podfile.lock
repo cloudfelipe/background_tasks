@@ -1,12 +1,16 @@
 PODS:
   - Alamofire (4.8.2)
   - BEMCheckBox (1.4.1)
+  - collection-view-layouts/Core (0.2.2)
+  - collection-view-layouts/InstagramLayout (0.2.2):
+    - collection-view-layouts/Core
   - EmeraldIOS (1.2.2):
     - BEMCheckBox
   - TLPhotoPicker (1.9.4)
 
 DEPENDENCIES:
   - Alamofire
+  - collection-view-layouts/InstagramLayout
   - EmeraldIOS (from `https://github.com/cebroker/emerald-ios.git`)
   - TLPhotoPicker
 
@@ -14,6 +18,7 @@ SPEC REPOS:
   https://github.com/cocoapods/specs.git:
     - Alamofire
     - BEMCheckBox
+    - collection-view-layouts
     - TLPhotoPicker
 
 EXTERNAL SOURCES:
@@ -28,9 +33,10 @@ CHECKOUT OPTIONS:
 SPEC CHECKSUMS:
   Alamofire: ae5c501addb7afdbb13687d7f2f722c78734c2d3
   BEMCheckBox: 5ba6e37ade3d3657b36caecc35c8b75c6c2b1a4e
+  collection-view-layouts: 474ec4cce601a26247737227a97fa6a4eb30213f
   EmeraldIOS: d262476a0a0d3d64cf97a642563997cbedc7cc52
   TLPhotoPicker: 33f41e546e584729855e8bee3b378c9062ecb44e
 
-PODFILE CHECKSUM: 7457e73f50aabe25d584695254e3c5f7254919c6
+PODFILE CHECKSUM: 8cd7711eaf8df5422c3393a9491f16ba8c57502e
 
 COCOAPODS: 1.7.5

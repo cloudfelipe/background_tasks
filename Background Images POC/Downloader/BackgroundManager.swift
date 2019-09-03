@@ -23,16 +23,18 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
     }
     
     func startTask(_ item: T) {
-        guard let sessionTask = prepareSessionTask(associatedTo: item) else { return }
         item.newAttempt()
         if item.attempts > maxAtteptsByTask {
             context.deleteBackgroundItem(item)
             let error = NSError(domain: "Max attempts reached", code: 500, userInfo: nil)
+            debugPrint("Max attempts reached")
             item.completionHandler?(.failure(error))
             return
         }
+        guard let sessionTask = prepareSessionTask(associatedTo: item) else { return }
         item.setStatus(.running)
         startTask(sessionTask, associatedWith: item)
+        debugPrint("starting task: \(item.id)")
     }
     
     func prepareSessionTask(associatedTo backgroundItem: T) -> URLSessionTask? {
@@ -63,6 +65,7 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
         }
         guard let httpResponse = task.response as? HTTPURLResponse else {
             let error = NSError(domain: "Server not response", code: 1000, userInfo: nil)
+            debugPrint("Server not response")
             backgroundTask.setStatus(.failed)
             backgroundTask.completionHandler?(.failure(error))
             context.saveBackgroundItem(backgroundTask)
@@ -70,6 +73,7 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
         }
         guard (200...299).contains(httpResponse.statusCode) else {
             let error = NSError(domain: "Request failed", code: httpResponse.statusCode, userInfo: nil)
+            debugPrint("Request failed")
             backgroundTask.setStatus(.failed)
             backgroundTask.completionHandler?(.failure(error))
             context.saveBackgroundItem(backgroundTask)
@@ -78,12 +82,17 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
         backgroundTask.setStatus(.completed)
         context.saveBackgroundItem(backgroundTask)
         backgroundTask.completionHandler?(.success(backgroundTask))
+        context.deleteBackgroundItem(backgroundTask)
         return true
     }
     
-    func restartPendingTasks(_ tasks: [T]) {
-        tasks.forEach { self.startTask($0) }
+    func restartIncompletedTasks() {
+        incompletedBackgroundItems { (incompletedItems) in
+            incompletedItems?.forEach { self.startTask($0) }
+        }
     }
+    
+    func incompletedBackgroundItems(_ completion: @escaping ((_ items: [T]?) -> Void)) { }
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error = error {
@@ -91,6 +100,7 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
                 backgroundTask.setStatus(.failed)
                 context.saveBackgroundItem(backgroundTask)
                 backgroundTask.completionHandler?(.failure(error))
+                debugPrint("didCompleteWithError")
             }
         }
     }
@@ -135,6 +145,6 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
             print("completed background task")
         }
         
-        NotificationManager.shared.sheduleNotificationInBackground(title: "urlSessionDidFinishEvents")
+        NotificationManager.shared.sheduleNotificationInBackground(title: "Background Tasks finished")
     }
 }

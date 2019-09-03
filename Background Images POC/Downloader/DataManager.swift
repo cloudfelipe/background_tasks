@@ -65,19 +65,14 @@ class DataManager {
         }
         uploader.upload(remoteURL: url, cachePath: cache.localPathURL, id: cache.id, data: imageData) { (result) in
             switch result {
-            case .success(let backgroundItem):
+            case .success(_):
                 print("image uploaded")
-                SessionWatcher.shared.processBackgroundItem(backgroundItem as! BackgroundItem)
                 completionHandler(true)
             case .failure(let error):
                 print(error)
                 completionHandler(false)
             }
         }
-    }
-    
-    func pendingTasks() {
-        
     }
     
     private func getImage(from url: URL) -> UIImage? {
@@ -87,74 +82,9 @@ class DataManager {
         } catch {
             return nil
         }
-        
         guard let imageData = retrievedData, let image = UIImage(data: imageData) else {
             return nil
         }
-        
         return image
-    }
-}
-
-final class SessionWatcher {
-    
-    static let backgroundSession = ""
-    
-    static let shared = SessionWatcher()
-    let context = BackgroundDownloaderContext<BackgroundItem>()
-//    let fieManager = LocalFileManager()
-    
-    private init() {
-    }
-    
-    func processBackgroundItem(_ item: BackgroundItemType) {
-//        let dataContex = BackgroundDownloaderContext<BackgroundItem>()
-        switch item.status {
-        case .completed:
-            LocalFileManager.removeItemWithId(item.id)
-//            dataContex.deleteBackgroundItem(item)
-            break
-        case .running:
-            if item is UploadBackgroundItem {
-                BackgroundUploader.shared.startTask(item as! UploadBackgroundItem)
-            } else if item is DownloadBackgroundItem {
-                BackgroundDownloader.shared.restartPendingTasks()
-            }
-            //Be sure if task was cancel and needs to be running again
-            
-            break
-        case .pending:
-            //Attemp to run the task again
-            break
-        case .failed:
-            break
-        }
-    }
-    
-    func watch() {
-        let configuration = URLSessionConfiguration.background(withIdentifier: "")
-        let session = URLSession(configuration: configuration)
-        session.getTasksWithCompletionHandler { [weak self] (_, uploadTasks, downloadTasks) in
-            if let incompletedDownloadItems = self?.incompletedItems(excluding: downloadTasks, for: DownloadBackgroundItem.self) {
-                BackgroundDownloader.shared.restartPendingTasks(incompletedDownloadItems)
-            }
-            if let incompletedUploadItem = self?.incompletedItems(excluding: uploadTasks, for: UploadBackgroundItem.self) {
-                BackgroundUploader.shared.restartPendingTasks(incompletedUploadItem)
-            }
-        }
-    }
-    
-    private func incompletedItems<T: BackgroundItemType>(excluding tasks: [URLSessionTask], for type: T.Type) -> [T] {
-        let currentDownloading = tasks.compactMap { $0.taskIdentifier }
-        let context = BackgroundDownloaderContext<T>()
-        return context.loadAllItemsFiltering(currentDownloading, exclude: true)
-    }
-    
-    func purge() {
-        let dataContex = BackgroundDownloaderContext<BackgroundItem>()
-        let allItems = dataContex.loadAllPendingItems()
-        let completedItems = allItems.filter { $0.status == .completed }
-        LocalFileManager.removeAllItemsByID(completedItems.map { $0.id })
-        dataContex.deleteItems(completedItems)
     }
 }

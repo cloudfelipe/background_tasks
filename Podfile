@@ -6,4 +6,5 @@ target 'Background Images POC' do
   pod "TLPhotoPicker"
   pod 'EmeraldIOS', :git => 'https://github.com/cebroker/emerald-ios.git'
   pod "Alamofire"
+  pod 'collection-view-layouts/InstagramLayout'
 end

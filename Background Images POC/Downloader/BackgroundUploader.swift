@@ -34,8 +34,10 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
     }
     
     override func prepareSessionTask(associatedTo backgroundItem: UploadBackgroundItem) -> URLSessionTask? {
-        var contentData = try? Data(contentsOf: backgroundItem.localPathURL)
-        contentData = contentData ?? backgroundItem.contentData
+        var contentData = backgroundItem.contentData
+        if contentData == nil {
+            contentData = try? Data(contentsOf: LocalFileManager.temporaryDirectory(appending: backgroundItem.id))
+        }
         guard let fileName = backgroundItem.fileName, let mimeType = backgroundItem.mimeType,
             let data = contentData, let formName = backgroundItem.formDataName else {
                 let error = NSError(domain: "Missing multipart form data", code: 404, userInfo: nil)
@@ -45,6 +47,14 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
         let multiPartData = MultiPartForm(fileName: fileName, mimyType: mimeType, formName: formName)
         let request = requestFor(remote: backgroundItem.remotePathURL, with: data, formData: multiPartData)
         return session.uploadTask(withStreamedRequest: request)
+    }
+    
+    override func incompletedBackgroundItems(_ completion: @escaping (([UploadBackgroundItem]?) -> Void)) {
+        session.getTasksWithCompletionHandler { [weak self] (_, currentTasks, _) in
+            let currentTasks = currentTasks.compactMap { $0.taskIdentifier }
+            let items = self?.context.loadAllItemsFiltering(currentTasks, exclude: true)
+            completion(items)
+        }
     }
     
     private func requestFor(remote url: URL, with data: Data, formData: MultiPartForm) -> URLRequest {

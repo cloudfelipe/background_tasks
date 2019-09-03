@@ -19,7 +19,7 @@ class BackgroundDownloaderContext<T: BackgroundItemType> {
         return "\(backgroundTask)\(id)"
     }
     
-    func loadAllPendingItems() -> [T] {
+    func loadAllBackgroundItems() -> [T] {
         return userDefaults.dictionaryRepresentation().keys.compactMap { (key) -> T? in
             key.hasPrefix(backgroundTask) ? self.loadItemFromStorage(with: key) : nil
         }
@@ -52,6 +52,7 @@ class BackgroundDownloaderContext<T: BackgroundItemType> {
     func deleteBackgroundItem(_ item: T) {
         inMemoryDownloadItems[identifier(with: item.taskIdentifier)] = nil
         userDefaults.removeObject(forKey: identifier(with: item.taskIdentifier))
+        LocalFileManager.removeItemWithId(item.id)
     }
     
     func deleteItems(_ items: [T]) {
@@ -61,8 +62,11 @@ class BackgroundDownloaderContext<T: BackgroundItemType> {
 
 extension BackgroundDownloaderContext {
     func loadAllItemsFiltering(_ ids: [Int], exclude: Bool) -> [T] {
-        let allItems = loadAllPendingItems()
+        let allItems = loadAllBackgroundItems()
         return allItems.filter { (item) -> Bool in
+//            if item.status != .running || item.status != .failed {
+//                return false
+//            }
             if exclude {
                 return !ids.contains(item.taskIdentifier)
             } else {

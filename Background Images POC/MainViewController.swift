@@ -16,12 +16,12 @@ class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         segmentedController?.setSegmentedBarTheme(.navigation)
-        setupContraints()
         let downloadingVC = DownloaderController.instantiate(fromAppStoryboard: .Main)
         downloadingVC.title = "Downloading"
         let uploadingVC = UploaderController.instantiate(fromAppStoryboard: .Main)
         uploadingVC.title = "Uploading"
         setupSegmentedController(controllers: [uploadingVC])
+        setupContraints()
     }
     
     private func setupSegmentedController(controllers: [UIViewController]) {

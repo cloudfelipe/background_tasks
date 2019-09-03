@@ -9,13 +9,14 @@
 import UIKit
 import TLPhotoPicker
 import Alamofire
+import collection_view_layouts
 
 class UploaderController: UIViewController {
     
     @IBOutlet weak var addPhotosButton: UIButton!
     @IBOutlet weak var collectionView: UICollectionView!
     
-    let dataManager = DataManager()
+    var layout: BaseLayout!
     
     private var selectedImages: [UploadGalleryAsset] = [] {
         didSet {
@@ -27,6 +28,15 @@ class UploaderController: UIViewController {
         super.viewDidLoad()
         collectionView.delegate = self
         collectionView.dataSource = self
+        
+        layout = InstagramLayout()
+        layout.delegate = self
+        // All layouts support this configs
+        layout.contentPadding = ItemsPadding(horizontal: 15, vertical: 15)
+        layout.cellsPadding = ItemsPadding(horizontal: 10, vertical: 10)
+        collectionView.setContentOffset(CGPoint.zero, animated: false)
+        collectionView.collectionViewLayout = layout
+        collectionView.reloadData()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -87,5 +97,11 @@ extension UploaderController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let cellWidth = (view.frame.size.width - 14.0)/2.0
         return CGSize(width: cellWidth, height: cellWidth)
+    }
+}
+
+extension UploaderController: LayoutDelegate {
+    func cellSize(indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 0.1, height: 0.1)
     }
 }

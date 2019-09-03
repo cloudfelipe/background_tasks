@@ -6,28 +6,8 @@
 //  Copyright © 2019 Felipe Correa. All rights reserved.
 //
 
-import Foundation
-
-class UploadItem: Codable {
-    
-    let remoteURL: URL
-    let cacheFilePath: URL
-    
-    var completionHandler: ForegroundUploadCompletionHandler?
-    
-    private enum CodingKeys: String, CodingKey {
-        case remoteURL
-        case cacheFilePath
-    }
-    
-    init(remoteURL: URL, cacheFilePath: URL) {
-        self.remoteURL = remoteURL
-        self.cacheFilePath = cacheFilePath
-    }
-}
-
-import UserNotifications
 import UIKit
+import UserNotifications
 
 class NotificationManager {
     static let shared = NotificationManager()
@@ -56,7 +36,7 @@ class NotificationManager {
         let content = UNMutableNotificationContent()
         
         content.title = notificationType
-        content.body = "This is example how to create"
+//        content.body = "This is example how to create"
         content.sound = UNNotificationSound.default
         content.badge = 1
         

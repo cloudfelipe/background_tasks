@@ -13,27 +13,6 @@ enum DataRequestResult<T> {
     case failure(Error)
 }
 
-typealias ForegroundDownloadCompletionHandler = ((_ result: DataRequestResult<URL>) -> Void)
-typealias ForegroundUploadCompletionHandler = ((_ result: DataRequestResult<Bool>) -> Void)
-
-class DownloadItem: Codable {
-    let remoteURL: URL //URL of the asset to be downloaded
-    let filePathURL: URL //URL of where the downloaded asset should be moved to on the local file system.
-    var foregroundCompletionHandler: ForegroundDownloadCompletionHandler? //a closure to be called when the download is complete.
-    
-    // MARK: - Init
-    
-    private enum CodingKeys: String, CodingKey {
-        case remoteURL
-        case filePathURL
-    }
-    
-    init(remoteURL: URL, filePathURL: URL) {
-        self.remoteURL = remoteURL
-        self.filePathURL = filePathURL
-    }
-}
-
 typealias ForegroundCompletionHandler = ((_ result: DataRequestResult<BackgroundItemType>) -> Void)
 
 protocol BackgroundItemType: Codable {
@@ -70,7 +49,7 @@ class BackgroundItem: BackgroundItemType {
     var status: BackgroundStatus
     var fileName: String?
     var mimeType: String?
-    
+    var formDataName: String?
     
     func newAttempt() {
         attempts += 1
@@ -93,6 +72,7 @@ class BackgroundItem: BackgroundItemType {
         case status
         case fileName
         case mimeType
+        case formDataName
     }
     
     init(id: String, remotePathURL: URL, localPathURL: URL, status: BackgroundStatus = .pending) {
@@ -105,7 +85,6 @@ class BackgroundItem: BackgroundItemType {
 
 final class UploadBackgroundItem: BackgroundItem {
     var contentData: Data?
-    var formDataName: String?
 }
 
 final class DownloadBackgroundItem: BackgroundItem {}
