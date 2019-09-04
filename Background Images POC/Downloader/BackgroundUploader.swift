@@ -12,8 +12,20 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
     
     struct MultiPartForm {
         let fileName: String
-        let mimyType: String
+        let mimeType: String
         let formName: String
+    }
+    
+    class MultipartUnit {
+        let data: Data
+        let formData: MultiPartForm
+        init(
+            data: Data,
+            formData: MultiPartForm
+            ){
+            self.data = data
+            self.formData = formData
+        }
     }
     
     static let shared = BackgroundUploader()
@@ -44,8 +56,8 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
                 backgroundItem.completionHandler?(.failure(error))
                 return nil
         }
-        let multiPartData = MultiPartForm(fileName: fileName, mimyType: mimeType, formName: formName)
-        let request = requestFor(remote: backgroundItem.remotePathURL, with: data, formData: multiPartData)
+        let multiPartData = MultiPartForm(fileName: fileName, mimeType: mimeType, formName: formName)
+        let request = requestFor(remote: backgroundItem.remotePathURL, with: [MultipartUnit(data: data , formData: multiPartData)])
         return session.uploadTask(withStreamedRequest: request)
     }
     
@@ -57,24 +69,33 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
         }
     }
     
-    private func requestFor(remote url: URL, with data: Data, formData: MultiPartForm) -> URLRequest {
+    private func requestFor(remote url: URL, with multipartUnits: [MultipartUnit]) -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         let boundary = String.generateBoundaryString()
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         var body = Data()
-        let fname = formData.fileName
-        let mimetype = formData.mimyType
-        let formItemName = formData.formName
         //define the data post parameter
-        body.append("--\(boundary)\r\n", using: .utf8)
-        body.append("Content-Disposition:form-data; name=\"\(formItemName)\"; filename=\"\(fname)\"\r\n", using: .utf8)
-        body.append("Content-Type: \(mimetype)\r\n\r\n", using: .utf8)
-        body.append(data)
-        body.append("\r\n", using: .utf8)
-        body.append("--\(boundary)--\r\n", using: .utf8)
+        multipartUnits.forEach {
+            body.append(prepareMultipartUnit(boundary: boundary, $0))
+        }
         request.httpBody = body
         return request
+    }
+
+    func prepareMultipartUnit(boundary: String, _ multipart: MultipartUnit) -> Data {
+        var bodyUnit = Data()
+        let fname = multipart.formData.fileName
+        let mimetype = multipart.formData.mimeType
+        let formItemName = multipart.formData.formName
+        //define the data post parameter
+        bodyUnit.append("--\(boundary)\r\n", using: .utf8)
+        bodyUnit.append("Content-Disposition:form-data; name=\"\(formItemName)\"; filename=\"\(fname)\"\r\n", using: .utf8)
+        bodyUnit.append("Content-Type: \(mimetype)\r\n\r\n", using: .utf8)
+        bodyUnit.append(multipart.data)
+        bodyUnit.append("\r\n", using: .utf8)
+        bodyUnit.append("--\(boundary)--\r\n", using: .utf8)
+        return bodyUnit
     }
 }
 
