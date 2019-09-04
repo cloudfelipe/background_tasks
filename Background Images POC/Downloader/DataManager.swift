@@ -75,6 +75,16 @@ class DataManager {
         }
     }
     
+    func uploadAssets(_ assets: [UploadGalleryAsset], completionHandler: @escaping((_ result: Bool) -> Void)) {
+        let url = URL(string: "http://localhost:3000/upload")!
+        let uploader = BackgroundUploader.shared
+        let cacheIds = assets.compactMap {
+            let imageData = $0.image.jpegData(compressionQuality: 0.9)!
+            return LocalFileManager.moveToTemp(data: imageData)?.id
+        }
+        
+    }
+    
     private func getImage(from url: URL) -> UIImage? {
         var retrievedData: Data? = nil
         do {

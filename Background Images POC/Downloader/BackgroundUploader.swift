@@ -45,6 +45,16 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
         startTask(uploadItem)
     }
     
+    func upload(to remoteURL: URL, cachedElementsWithIds ids: [String], completionHandler: @escaping ForegroundCompletionHandler) {
+        let items = ids.map {
+            let uploadItem = UploadBackgroundItem(id: $0, remotePathURL: remoteURL, localPathURL: remoteURL)
+            uploadItem.contentData = data
+            uploadItem.mimeType = "image/jpg"
+            uploadItem.fileName = id + ".jpg"
+            uploadItem.formDataName = "uploadedFile"
+        }
+    }
+    
     override func prepareSessionTask(associatedTo backgroundItem: UploadBackgroundItem) -> URLSessionTask? {
         var contentData = backgroundItem.contentData
         if contentData == nil {
