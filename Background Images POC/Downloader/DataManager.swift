@@ -33,26 +33,26 @@ class DataManager {
     }
     
     private func remotelyLoad(_ asset: GalleryAsset, remoteLoadHandler: @escaping ((_ result: DataRequestResult<LoadAssetResult>) -> Void)) {
-        let downloader = BackgroundDownloader.shared
-        
-        downloader.download(remoteURL: asset.url, filePathURL: asset.cachedLocalAssetURL()) { (result) in
-            switch result {
-            case .success(let item):
-                guard let image = self.getImage(from: item.localPathURL) else {
-                    remoteLoadHandler(.failure(APIError.invalidData))
-                    return
-                }
-                let loadResult = LoadAssetResult(asset: asset, image: image)
-                let dataRequestResult = DataRequestResult<LoadAssetResult>.success(loadResult)
-                
-                DispatchQueue.main.async {
-                    remoteLoadHandler(dataRequestResult)
-                }
-            case .failure(let error):
-                print("Error in data manager: \(error)")
-                remoteLoadHandler(.failure(error))
-            }
-        }
+//        let downloader = BackgroundDownloader.shared
+//        
+//        downloader.download(remoteURL: asset.url, filePathURL: asset.cachedLocalAssetURL()) { (result) in
+//            switch result {
+//            case .success(let item):
+//                guard let image = self.getImage(from: item.localPathURL) else {
+//                    remoteLoadHandler(.failure(APIError.invalidData))
+//                    return
+//                }
+//                let loadResult = LoadAssetResult(asset: asset, image: image)
+//                let dataRequestResult = DataRequestResult<LoadAssetResult>.success(loadResult)
+//                
+//                DispatchQueue.main.async {
+//                    remoteLoadHandler(dataRequestResult)
+//                }
+//            case .failure(let error):
+//                print("Error in data manager: \(error)")
+//                remoteLoadHandler(.failure(error))
+//            }
+//        }
     }
     
     func upload(_ asset: UploadGalleryAsset, completionHandler: @escaping((_ result: Bool) -> Void)) {
@@ -63,7 +63,30 @@ class DataManager {
             completionHandler(false)
             return
         }
-        uploader.upload(remoteURL: url, cachePath: cache.localPathURL, id: cache.id, data: imageData) { (result) in
+//        uploader.upload(remoteURL: url, cachePath: cache.localPathURL, id: cache.id, data: imageData) { (result) in
+//            switch result {
+//            case .success(_):
+//                print("image uploaded")
+//                completionHandler(true)
+//            case .failure(let error):
+//                print(error)
+//                completionHandler(false)
+//            }
+//        }
+    }
+    
+    func uploadAssets(_ assets: [UploadGalleryAsset], completionHandler: @escaping((_ result: Bool) -> Void)) {
+        let url = URL(string: "http://localhost:3000/multiupload")!
+        let uploader = BackgroundUploader.shared
+        let files = assets.compactMap { (asset) -> UploadBackgroundItem? in
+            guard let imageData = asset.image.jpegData(compressionQuality: 0.9),
+                let cache = LocalFileManager.moveToTemp(data: imageData) else { return nil }
+            let item = UploadBackgroundItem(id: cache.id,
+                                            fileName: "\(cache.id).jpg", mimeType: "image/jpg", formDataName: "uploadedFile")
+            item.contentData = imageData
+            return item
+        }
+        uploader.upload(to: url, inputItems: files) { (result) in
             switch result {
             case .success(_):
                 print("image uploaded")
@@ -73,16 +96,6 @@ class DataManager {
                 completionHandler(false)
             }
         }
-    }
-    
-    func uploadAssets(_ assets: [UploadGalleryAsset], completionHandler: @escaping((_ result: Bool) -> Void)) {
-        let url = URL(string: "http://localhost:3000/upload")!
-        let uploader = BackgroundUploader.shared
-        let cacheIds = assets.compactMap {
-            let imageData = $0.image.jpegData(compressionQuality: 0.9)!
-            return LocalFileManager.moveToTemp(data: imageData)?.id
-        }
-        
     }
     
     private func getImage(from url: URL) -> UIImage? {

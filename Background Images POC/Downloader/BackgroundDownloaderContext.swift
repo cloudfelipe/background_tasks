@@ -8,7 +8,7 @@
 
 import Foundation
 
-class BackgroundDownloaderContext<T: BackgroundItemType> {
+class BackgroundDownloaderContext<T: StorableTaskType> {
     
     private let backgroundTask = "BACKGROUND_TASK:"
     

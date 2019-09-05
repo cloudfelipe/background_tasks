@@ -84,6 +84,10 @@ class LocalFileManager {
             .appendingPathComponent(id, isDirectory: false)
     }
     
+    class func temporaryDirectory() -> URL {
+        return temporaryDirectory(appending: UUID().uuidString)
+    }
+    
     enum URLMethod: String {
         case get
         case post

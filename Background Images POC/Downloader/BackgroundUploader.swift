@@ -8,25 +8,30 @@
 
 import Foundation
 
-class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
+class BackgroundUploader: BackgroundManager<UploadMultipartItem> {
     
-    struct MultiPartForm {
-        let fileName: String
-        let mimeType: String
-        let formName: String
-    }
-    
-    class MultipartUnit {
+    struct InputItem {
+        let id: String
         let data: Data
-        let formData: MultiPartForm
-        init(
-            data: Data,
-            formData: MultiPartForm
-            ){
-            self.data = data
-            self.formData = formData
-        }
     }
+    
+//    struct MultiPartForm {
+//        let fileName: String
+//        let mimeType: String
+//        let formName: String
+//    }
+//
+//    class MultipartUnit {
+//        let data: Data
+//        let formData: MultiPartForm
+//        init(
+//            data: Data,
+//            formData: MultiPartForm
+//            ){
+//            self.data = data
+//            self.formData = formData
+//        }
+//    }
     
     static let shared = BackgroundUploader()
     
@@ -34,6 +39,7 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
         super.init()
     }
     
+    /*
     func upload(remoteURL: URL, cachePath: URL, id: String, data: Data, completionHandler: @escaping ForegroundCompletionHandler) {
         print("Scheduling to upload: \(cachePath)")
         let uploadItem = UploadBackgroundItem(id: id, remotePathURL: remoteURL, localPathURL: cachePath)
@@ -44,18 +50,16 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
         uploadItem.completionHandler = completionHandler
         startTask(uploadItem)
     }
+    */
     
-    func upload(to remoteURL: URL, cachedElementsWithIds ids: [String], completionHandler: @escaping ForegroundCompletionHandler) {
-        let items = ids.map {
-            let uploadItem = UploadBackgroundItem(id: $0, remotePathURL: remoteURL, localPathURL: remoteURL)
-            uploadItem.contentData = data
-            uploadItem.mimeType = "image/jpg"
-            uploadItem.fileName = id + ".jpg"
-            uploadItem.formDataName = "uploadedFile"
-        }
+    func upload(to remoteURL: URL, inputItems: [UploadBackgroundItem], completionHandler: @escaping ForegroundCompletionHandler) {
+        let multipart = UploadMultipartItem(id: UUID().uuidString, remotePathURL: remoteURL, backgroundItems: inputItems)
+        multipart.completionHandler = completionHandler
+        startTask(multipart)
     }
     
-    override func prepareSessionTask(associatedTo backgroundItem: UploadBackgroundItem) -> URLSessionTask? {
+    override func prepareSessionTask(associatedTo backgroundItem: UploadMultipartItem) -> URLSessionTask? {
+        /*
         var contentData = backgroundItem.contentData
         if contentData == nil {
             contentData = try? Data(contentsOf: LocalFileManager.temporaryDirectory(appending: backgroundItem.id))
@@ -69,9 +73,14 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
         let multiPartData = MultiPartForm(fileName: fileName, mimeType: mimeType, formName: formName)
         let request = requestFor(remote: backgroundItem.remotePathURL, with: [MultipartUnit(data: data , formData: multiPartData)])
         return session.uploadTask(withStreamedRequest: request)
+        */
+        let directory = LocalFileManager.temporaryDirectory()
+        let request = requestWith(multipart: backgroundItem, directory: directory)
+//        return session.uploadTask(withStreamedRequest: request)
+        return session.uploadTask(with: request, fromFile: directory)
     }
     
-    override func incompletedBackgroundItems(_ completion: @escaping (([UploadBackgroundItem]?) -> Void)) {
+    override func incompletedBackgroundItems(_ completion: @escaping (([UploadMultipartItem]?) -> Void)) {
         session.getTasksWithCompletionHandler { [weak self] (_, currentTasks, _) in
             let currentTasks = currentTasks.compactMap { $0.taskIdentifier }
             let items = self?.context.loadAllItemsFiltering(currentTasks, exclude: true)
@@ -79,34 +88,18 @@ class BackgroundUploader: BackgroundManager<UploadBackgroundItem> {
         }
     }
     
-    private func requestFor(remote url: URL, with multipartUnits: [MultipartUnit]) -> URLRequest {
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        let boundary = String.generateBoundaryString()
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        var body = Data()
-        //define the data post parameter
-        multipartUnits.forEach {
-            body.append(prepareMultipartUnit(boundary: boundary, $0))
+    private func requestWith(multipart: UploadMultipartItem, directory: URL) -> URLRequest {
+        let alamofire = MultipartFormData()
+        multipart.backgroundItems.forEach {
+            alamofire.append($0.contentData!, withName: $0.formDataName, fileName: $0.fileName, mimeType: $0.mimeType)
         }
-        request.httpBody = body
+        var request = URLRequest(url: multipart.remotePathURL)
+        request.setValue(alamofire.contentType, forHTTPHeaderField: "Content-Type")
+        request.httpMethod = "POST"
+        try? alamofire.writeEncodedData(to: directory)
         return request
     }
 
-    func prepareMultipartUnit(boundary: String, _ multipart: MultipartUnit) -> Data {
-        var bodyUnit = Data()
-        let fname = multipart.formData.fileName
-        let mimetype = multipart.formData.mimeType
-        let formItemName = multipart.formData.formName
-        //define the data post parameter
-        bodyUnit.append("--\(boundary)\r\n", using: .utf8)
-        bodyUnit.append("Content-Disposition:form-data; name=\"\(formItemName)\"; filename=\"\(fname)\"\r\n", using: .utf8)
-        bodyUnit.append("Content-Type: \(mimetype)\r\n\r\n", using: .utf8)
-        bodyUnit.append(multipart.data)
-        bodyUnit.append("\r\n", using: .utf8)
-        bodyUnit.append("--\(boundary)--\r\n", using: .utf8)
-        return bodyUnit
-    }
 }
 
 

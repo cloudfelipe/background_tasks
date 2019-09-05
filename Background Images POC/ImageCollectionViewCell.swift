@@ -44,7 +44,6 @@ class ImageCollectionViewCell: UICollectionViewCell {
     func setupUploaderAsset(with image: UploadGalleryAsset) {
         uploadAsset = image
         imageView.image = image.image
-        updateVisibility(for: image.state)
     }
     
     func startUpload() {

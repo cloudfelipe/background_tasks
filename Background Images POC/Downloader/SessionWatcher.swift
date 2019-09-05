@@ -13,7 +13,7 @@ final class SessionWatcher {
     static let backgroundSession = ""
     
     static let shared = SessionWatcher()
-    let context = BackgroundDownloaderContext<BackgroundItem>()
+    let context = BackgroundDownloaderContext<UploadMultipartItem>()
     
     private init() {
     }

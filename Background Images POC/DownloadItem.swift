@@ -13,15 +13,20 @@ enum DataRequestResult<T> {
     case failure(Error)
 }
 
-typealias ForegroundCompletionHandler = ((_ result: DataRequestResult<BackgroundItemType>) -> Void)
+typealias ForegroundCompletionHandler = ((_ result: DataRequestResult<Bool>) -> Void)
 
-protocol UploadMultipartType: Codable {
+protocol StorableTaskType: Codable {
     var id: String { get }
     var taskIdentifier: Int { get }
-    var attempts: Int { get }
-//    var completionHandler: ForegroundCompletionHandler? { get }
-    var status: BackgroundStatus { get }
-    var backgroundItems: [BackgroundItemType] { get }
+}
+
+protocol BackgroundTaskType: StorableTaskType {
+    associatedtype BackgroundItem: Codable
+    
+    var attempts: Int { get set }
+    var completionHandler: ForegroundCompletionHandler? { get }
+    var status: BackgroundStatus { get set }
+    var backgroundItems: [BackgroundItem] { get set }
     
     func newAttempt()
     func setStatus(_ newStatus: BackgroundStatus)
@@ -29,10 +34,10 @@ protocol UploadMultipartType: Codable {
 }
 
 protocol BackgroundItemType: Codable {
-    var id: String { get }
-    var fileName: String? { get }
-    var mimeType: String? { get }
-    var formDataName: String? { get }
+    var id: String { get set }
+    var fileName: String { get set }
+    var mimeType: String { get set }
+    var formDataName: String { get set }
 }
 
 enum BackgroundStatus: Int, Codable {
@@ -45,11 +50,11 @@ enum BackgroundStatus: Int, Codable {
 class BackgroundItem: BackgroundItemType {
     
     var id: String
-    var fileName: String?
-    var mimeType: String?
-    var formDataName: String?
+    var fileName: String
+    var mimeType: String
+    var formDataName: String
     
-    init(id: String, fileName: String?, mimeType: String?, formDataName: String?) {
+    init(id: String, fileName: String, mimeType: String, formDataName: String) {
         self.id = id
         self.fileName = fileName
         self.mimeType = mimeType
@@ -61,15 +66,15 @@ final class UploadBackgroundItem: BackgroundItem {
     var contentData: Data?
 }
 
-final class UploadMultipartItem: UploadMultipartType {
+final class UploadMultipartItem: BackgroundTaskType {
    
     var id: String
     var taskIdentifier: Int = -1
     var remotePathURL: URL
-//    var completionHandler: ForegroundCompletionHandler?
+    var completionHandler: ForegroundCompletionHandler?
     var attempts: Int = 0
     var status: BackgroundStatus
-    var backgroundItems: [BackgroundItemType]
+    var backgroundItems: [UploadBackgroundItem]
     
     func newAttempt() {
         attempts += 1
@@ -94,11 +99,11 @@ final class UploadMultipartItem: UploadMultipartType {
     
 //    init(from decoder: Decoder) throws {
 //        let container = try decoder.container(keyedBy: CodingKeys.self)
-//        let response = try container.nestedContainer(keyedBy: CodingKeys.self, forKey: .)
-//        self.items = try
+////        let response = try container.nestedContainer(keyedBy: CodingKeys.self, forKey: .backgroundItems)
+//        self.items = try container.decode([BackgroundItem].self, forKey: .backgroundItems)
 //    }
     
-    init(id: String, remotePathURL: URL, backgroundItems: [BackgroundItemType], status: BackgroundStatus = .pending) {
+    init(id: String, remotePathURL: URL, backgroundItems: [UploadBackgroundItem], status: BackgroundStatus = .pending) {
         self.id = id
         self.backgroundItems = backgroundItems
         self.remotePathURL = remotePathURL

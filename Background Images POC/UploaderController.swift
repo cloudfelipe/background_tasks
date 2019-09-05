@@ -18,9 +18,11 @@ class UploaderController: UIViewController {
     
     var layout: BaseLayout!
     
+    private var manager = DataManager()
+    
     private var selectedImages: [UploadGalleryAsset] = [] {
         didSet {
-            self.reloadImages()
+            self.uploadAssets()
         }
     }
     
@@ -61,6 +63,13 @@ class UploaderController: UIViewController {
         pickerController.configure = conf
         self.present(pickerController, animated: true, completion: nil)
     }
+    
+    private func uploadAssets() {
+        reloadImages()
+        manager.uploadAssets(selectedImages) { (completed) in
+            self.reloadImages()
+        }
+    }
 }
 
 extension UploaderController: TLPhotosPickerViewControllerDelegate {
@@ -85,11 +94,6 @@ extension UploaderController: UICollectionViewDataSource {
         let asset = selectedImages[indexPath.row]
         cell.setupUploaderAsset(with: asset)
         return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let cell = collectionView.cellForItem(at: indexPath) as! ImageCollectionViewCell
-        cell.startUpload()
     }
 }
 

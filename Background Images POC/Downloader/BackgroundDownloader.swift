@@ -7,7 +7,7 @@
 //
 
 import Foundation
-
+/*
 class BackgroundDownloader: BackgroundManager<DownloadBackgroundItem> {
     
     static let shared = BackgroundDownloader()
@@ -42,3 +42,4 @@ class BackgroundDownloader: BackgroundManager<DownloadBackgroundItem> {
         }
     }
 }
+*/

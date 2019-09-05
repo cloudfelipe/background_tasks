@@ -8,7 +8,7 @@
 
 import Foundation
 
-class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDelegate, URLSessionDataDelegate {
+class BackgroundManager<T: BackgroundTaskType>: NSObject, URLSessionDownloadDelegate, URLSessionDataDelegate {
     
     var backgroundCompletionHandler: (() -> Void)?
     
@@ -87,7 +87,7 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
         }
         backgroundTask.setStatus(.completed)
         context.saveBackgroundItem(backgroundTask)
-        backgroundTask.completionHandler?(.success(backgroundTask))
+        backgroundTask.completionHandler?(.success(true))
         context.deleteBackgroundItem(backgroundTask)
         return true
     }
@@ -113,6 +113,9 @@ class BackgroundManager<T: BackgroundItemType>: NSObject, URLSessionDownloadDele
     
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         handleResponseFromTask(dataTask)
+        if let dataString = String(data: data, encoding: .utf8) {
+            print("Response: \(dataString)")
+        }
     }
     
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
